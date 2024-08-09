@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload with Progress</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #f3f3f3;
+            border: 1px solid #ccc;
+            margin-top: 20px;
+        }
+        .progress-bar-fill {
+            width: 0;
+            height: 30px;
+            background-color: #4caf50;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>File Upload with Progress</h1>
+    <form id="uploadForm">
+        <input type="file" id="fileInput" name="fileToUpload" required>
+        <button type="submit">Upload</button>
+    </form>
+    <div class="progress-bar" id="progressBar">
+        <div class="progress-bar-fill" id="progressBarFill"></div>
+    </div>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            var fileInput = document.getElementById('fileInput');
+            var file = fileInput.files[0];
+
+            if (file) {
+                var formData = new FormData();
+                formData.append('reqtype', 'fileupload');
+                formData.append('userhash', 'da98f6c298dce1186854a1bfe');
+                formData.append('fileToUpload', file);
+
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', 'https://catbox.moe/user/api.php', true);
+
+                xhr.upload.addEventListener('progress', function(event) {
+                    if (event.lengthComputable) {
+                        var percentComplete = (event.loaded / event.total) * 100;
+                        var progressBarFill = document.getElementById('progressBarFill');
+                        progressBarFill.style.width = percentComplete + '%';
+                        progressBarFill.textContent = Math.round(percentComplete) + '%';
+                    }
+                });
+
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            document.getElementById('result').textContent = 'Upload complete: ' + xhr.responseText;
+                        } else {
+                            document.getElementById('result').textContent = 'Upload failed: ' + xhr.statusText;
+                        }
+                    }
+                };
+
+                xhr.send(formData);
+            }
+        });
+    </script>
+</body>
+</html>

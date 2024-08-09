@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Video</title>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js"></script>
+    <script>
+      // Your web app's Firebase configuration
+      var firebaseConfig = {
+        apiKey: "AIzaSyCvlW7N2fF_aJBKngDGPhjkN7jcJvR3IJI",
+        authDomain: "videoup-20d98.firebaseapp.com",
+        projectId: "videoup-20d98",
+        storageBucket: "videoup-20d98.appspot.com",
+        messagingSenderId: "341868721928",
+        appId: "1:341868721928:web:713ba4845b78c2446edebd",
+        measurementId: "G-K646T8RKDW"
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      var storage = firebase.storage();
+
+      function uploadFile() {
+        var file = document.getElementById('fileInput').files[0];
+        if (file) {
+          // Check if the file type is MP4
+          if (file.type !== 'video/mp4') {
+            alert('Only MP4 files are allowed');
+            return;
+          }
+
+          // Check if the file size is less than 64 MB
+          if (file.size > 64 * 1024 * 1024) {
+            alert('File size must be less than 64 MB');
+            return;
+          }
+
+          var randid = makeid(5);
+          var storageRef = storage.ref('videos/' + randid + file.name);
+          var uploadTask = storageRef.put(file);
+          var progressBar = document.getElementById('progressBar');
+          var progressDiv = document.getElementById('progressDiv');
+          var downloadLink = document.getElementById('downloadLink');
+
+          progressDiv.style.display = 'block';
+
+          var loadingElement = document.getElementById('loading');
+          loadingElement.style.display = 'block';
+
+          uploadTask.on('state_changed', function(snapshot) {
+            var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            progressBar.value = progress;
+            console.log('Upload is ' + progress + '% done');
+          }, function(error) {
+            console.log('Error uploading file:', error);
+          }, function() {
+            uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
+
+              const id = makeid(4);
+              const data = {
+                "link": id,
+                "medialink": downloadURL
+              };
+
+              var currentOrigin = window.location.origin;
+              fetch(currentOrigin + '/getnewurl', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+              })
+              .then(response => response.json())
+              .then(data => {
+                console.log('Success:', data);
+                window.location.href = currentOrigin + '/v/' + id;
+              })
+              .catch((error) => {
+                console.error('Error:', error);
+              });
+
+            });
+          });
+        } else {
+          alert('No file selected');
+        }
+      }
+
+      function makeid(length) {
+          let result = '';
+          const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+          const charactersLength = characters.length;
+          let counter = 0;
+          while (counter < length) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            counter += 1;
+          }
+          return result;
+      }
+    </script>
+
+    <style>
+      /* CSS to hide the loading GIF initially */
+      #loading {
+          display: none;
+      }
+      #progressDiv {
+          display: none;
+      }
+    </style>
+</head>
+
+<body>
+    <h1>Upload Video</h1>
+    <input type="file" id="fileInput" accept="video/mp4">
+    <button onclick="uploadFile()">Upload</button>
+
+    <div id="loading">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif" alt="Loading..." />
+    </div>
+    <div id="progressDiv">
+        <progress id="progressBar" value="0" max="100" style="width:100%;"></progress>
+    </div>
+</body>
+</html>

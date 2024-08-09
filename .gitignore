@@ -1,0 +1,5 @@
+.venv/
+shortenlink.json
+track_upload.json
+track_uses.json
+static/videos/*
