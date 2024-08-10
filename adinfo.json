@@ -1,0 +1,61 @@
+{
+    "knAi0": {
+        "is_public": false,
+        "add_ad_script": false,
+        "ad_option": "",
+        "ad_script": "",
+        "ad_position": "body"
+    },
+    "5EtbE": {
+        "is_public": false,
+        "add_ad_script": true,
+        "ad_option": "custom",
+        "ad_script": "sadsadsads",
+        "ad_position": "body"
+    },
+    "zKVG4": {
+        "is_public": false,
+        "add_ad_script": true,
+        "ad_option": "custom",
+        "ad_script": "sadsadsads",
+        "ad_position": "head"
+    },
+    "HMhLF": {
+        "is_public": false,
+        "add_ad_script": true,
+        "ad_option": "minimal",
+        "ad_script": "sadsadsads",
+        "ad_position": "head"
+    },
+    "rQxia": {
+        "is_public": false,
+        "add_ad_script": true,
+        "ad_option": "minimal"
+    },
+    "Z0CJU": {
+        "is_public": false,
+        "add_ad_script": true,
+        "ad_option": "custom",
+        "ad_script": "xyz",
+        "ad_position": "body"
+    },
+    "31fhA": {
+        "is_public": false,
+        "change_ad_script": true,
+        "ad_option": "minimal"
+    },
+    "zYUcq": {
+        "is_public": false,
+        "change_ad_script": true,
+        "ad_option": "custom",
+        "ad_script": "hello",
+        "ad_position": "body"
+    },
+    "v8gVX": {
+        "is_public": false,
+        "change_ad_script": true,
+        "ad_option": "custom",
+        "ad_script": "hello2",
+        "ad_position": "head"
+    }
+}

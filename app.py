@@ -4,6 +4,7 @@ from flask import Flask, render_template, render_template_string, request, redir
 from flask import jsonify
 import json
 import os
+from random import randint
 import time
 app = Flask(__name__)
 app.secret_key = 'udsgoyfundgofcyadspijhorfaisgfsai8dygpd'
@@ -11,6 +12,7 @@ UPLOAD_FOLDER = 'static/videos'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 data = {}
+
 with open('shortenlink.json', 'r') as file:
     data = json.load(file)
 def write_shorturl(key, value, filename='shortenlink.json'):
@@ -18,6 +20,15 @@ def write_shorturl(key, value, filename='shortenlink.json'):
     data[key] = value
     with open('shortenlink.json', 'w') as file:
         json.dump(data, file, indent=4)
+
+adinfo = {}
+with open('adinfo.json', 'r') as file:
+    adinfo = json.load(file)
+def write_adinfo(key, value, filename='adinfo.json'):
+    global adinfo
+    adinfo[key] = value
+    with open('adinfo.json', 'w') as file:
+        json.dump(adinfo, file, indent=4)
 
 
 track_uses = {} # {time: [(filename, count), (filename, count),...], time: [(filename, count), (filename, count),...], ...}
@@ -37,7 +48,8 @@ def upload():
     if request.method == 'POST':
         video = request.files['video']
         make_public = 'make_public' in request.form
-        add_ad_script = 'add_ad_script' in request.form
+        change_ad_script = 'change_ad_script' in request.form
+        ad_option = request.form.get('ad_option', '')
         ad_script = request.form.get('ad_script', '')
         ad_position = request.form.get('ad_position', '')
 
@@ -46,12 +58,23 @@ def upload():
             video_path = os.path.join(app.config['UPLOAD_FOLDER'], random_filename)
             video.save(video_path)
             upload_status[random_filename] = 'uploaded'
-            print(f'Video uploaded: {random_filename}')
-            print(f'Make public: {make_public}')
-            print(f'Add ad script: {add_ad_script}')
-            print(f'Ad script: {ad_script}')
-            print(f'Ad position: {ad_position}')
+            if ad_option == "custom":
+                ad_script = ad_script.strip()
+                if len(ad_script)<=100 and ad_script.startswith("<script>") and ad_script.endswith("</script>") and ad_script.count("script") == 2:
+                    ad_script = ad_script[8:-9]
+                else:
+                    change_ad_script = False
+                    
+            if change_ad_script == False:
+                write_adinfo(random_filename[:-4], {'is_public':make_public, 'change_ad_script': change_ad_script})
+            elif ad_option == "minimal":
+                write_adinfo(random_filename[:-4], {'is_public':make_public, 'change_ad_script': change_ad_script, 'ad_option': ad_option})
+            else:
+                write_adinfo(random_filename[:-4], {'is_public':make_public, 'change_ad_script': change_ad_script, 'ad_option': ad_option, 'ad_script': ad_script, 'ad_position': ad_position})
+            
             video_url = url_for('view_video', filename=random_filename)
+            
+            write_shorturl(random_filename[:-4], "/static/videos/"+random_filename)
             return video_url
 
     return render_template('upload2.html')
@@ -163,6 +186,22 @@ def view_video(filename):
 
     if redirecttype == True:
         actual_link = data[filename]
+        info = adinfo[filename]
+        if info['change_ad_script'] == True:
+            rand = randint(0, 100)
+            if info['ad_option'] == "minimal":
+                if rand<5:
+                    return render_template('player.html', selected_video=actual_link)
+                else:
+                    return render_template('player_custom.html', selected_video=actual_link, ad_script="", ad_position="")
+            elif info['ad_option'] == "custom":
+                if rand<5:
+                    return render_template('player.html', selected_video=actual_link)
+                else:
+                    if info['ad_position'] == "head":
+                        return render_template('player_custom.html', selected_video=actual_link, headscript=info['ad_script'], bodyscript="")
+                    elif info['ad_position'] == "body":
+                        return render_template('player_custom.html', selected_video=actual_link, headscript="", bodyscript=info['ad_script'])
         return render_template('player.html', selected_video=actual_link)
 
     if time.time() - last_track > track_interval:

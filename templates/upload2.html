@@ -60,6 +60,10 @@
         .checkbox-group input[type="checkbox"] {
             margin-right: 10px;
         }
+        .ad-options {
+            display: none;
+            margin-top: 10px;
+        }
         .ad-details {
             display: none;
             margin-top: 10px;
@@ -81,13 +85,25 @@
     </style>
     <script>
         function toggleAdDetails() {
-            var adCheckbox = document.getElementById('add_ad_script');
+            var adCheckbox = document.getElementById('change_ad_script');
+            var adOptions = document.getElementById('ad_options');
+            var minimalAdOption = document.getElementById('minimal_ad');
             var adDetails = document.getElementById('ad_details');
+
             if (adCheckbox.checked) {
-                adDetails.style.display = 'block';
+                adOptions.style.display = 'block';
+                minimalAdOption.checked = true; // Default to Minimal Ad (5%)
+                adDetails.style.display = 'none';
             } else {
+                adOptions.style.display = 'none';
                 adDetails.style.display = 'none';
             }
+        }
+
+        function handleAdOptionChange() {
+            var adOption = document.querySelector('input[name="ad_option"]:checked').value;
+            var adDetails = document.getElementById('ad_details');
+            adDetails.style.display = adOption === 'custom' ? 'block' : 'none';
         }
 
         function validateFileSize() {
@@ -145,8 +161,18 @@
                 <label for="make_public">Make public in archive</label>
             </div>
             <div class="checkbox-group">
-                <input type="checkbox" name="add_ad_script" id="add_ad_script" onclick="toggleAdDetails()">
-                <label for="add_ad_script">Add Ad Script</label>
+                <input type="checkbox" name="change_ad_script" id="change_ad_script" onclick="toggleAdDetails()">
+                <label for="change_ad_script">Change Ad Format</label>
+            </div>
+            <div id="ad_options" class="ad-options">
+                <div class="form-group">
+                    <input type="radio" name="ad_option" value="minimal" id="minimal_ad" onclick="handleAdOptionChange()">
+                    <label for="minimal_ad">Minimal Ad (5%)</label>
+                </div>
+                <div class="form-group">
+                    <input type="radio" name="ad_option" value="custom" id="custom_ad" onclick="handleAdOptionChange()">
+                    <label for="custom_ad">Custom Ad</label>
+                </div>
             </div>
             <div id="ad_details" class="ad-details">
                 <div class="form-group">
@@ -156,9 +182,8 @@
                 <div class="form-group">
                     <label for="ad_position">Ad Position:</label>
                     <select name="ad_position" id="ad_position">
-                        <option value="">Select position</option>
+                        <option value="body" selected>Body</option>
                         <option value="head">Head</option>
-                        <option value="body">Body</option>
                     </select>
                 </div>
             </div>
