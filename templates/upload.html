@@ -1,126 +1,199 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload Video</title>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js"></script>
-    <script>
-      // Your web app's Firebase configuration
-      var firebaseConfig = {
-        apiKey: "AIzaSyCvlW7N2fF_aJBKngDGPhjkN7jcJvR3IJI",
-        authDomain: "videoup-20d98.firebaseapp.com",
-        projectId: "videoup-20d98",
-        storageBucket: "videoup-20d98.appspot.com",
-        messagingSenderId: "341868721928",
-        appId: "1:341868721928:web:713ba4845b78c2446edebd",
-        measurementId: "G-K646T8RKDW"
-      };
-      // Initialize Firebase
-      firebase.initializeApp(firebaseConfig);
-      var storage = firebase.storage();
-
-      function uploadFile() {
-        var file = document.getElementById('fileInput').files[0];
-        if (file) {
-          // Check if the file type is MP4
-          if (file.type !== 'video/mp4') {
-            alert('Only MP4 files are allowed');
-            return;
-          }
-
-          // Check if the file size is less than 64 MB
-          if (file.size > 64 * 1024 * 1024) {
-            alert('File size must be less than 64 MB');
-            return;
-          }
-
-          var randid = makeid(5);
-          var storageRef = storage.ref('videos/' + randid + file.name);
-          var uploadTask = storageRef.put(file);
-          var progressBar = document.getElementById('progressBar');
-          var progressDiv = document.getElementById('progressDiv');
-          var downloadLink = document.getElementById('downloadLink');
-
-          progressDiv.style.display = 'block';
-
-          var loadingElement = document.getElementById('loading');
-          loadingElement.style.display = 'block';
-
-          uploadTask.on('state_changed', function(snapshot) {
-            var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            progressBar.value = progress;
-            console.log('Upload is ' + progress + '% done');
-          }, function(error) {
-            console.log('Error uploading file:', error);
-          }, function() {
-            uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
-
-              const id = makeid(4);
-              const data = {
-                "link": id,
-                "medialink": downloadURL
-              };
-
-              var currentOrigin = window.location.origin;
-              fetch(currentOrigin + '/getnewurl', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-              })
-              .then(response => response.json())
-              .then(data => {
-                console.log('Success:', data);
-                window.location.href = currentOrigin + '/v/' + id;
-              })
-              .catch((error) => {
-                console.error('Error:', error);
-              });
-
-            });
-          });
-        } else {
-          alert('No file selected');
-        }
-      }
-
-      function makeid(length) {
-          let result = '';
-          const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-          const charactersLength = characters.length;
-          let counter = 0;
-          while (counter < length) {
-            result += characters.charAt(Math.floor(Math.random() * charactersLength));
-            counter += 1;
-          }
-          return result;
-      }
-    </script>
-
     <style>
-      /* CSS to hide the loading GIF initially */
-      #loading {
-          display: none;
-      }
-      #progressDiv {
-          display: none;
-      }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="file"],
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            border: none;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .ad-options {
+            display: none;
+            margin-top: 10px;
+        }
+        .ad-details {
+            display: none;
+            margin-top: 10px;
+        }
+        #progress-container {
+            display: none;
+            width: 100%;
+            background-color: #f3f3f3;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        #progress-bar {
+            width: 0;
+            height: 20px;
+            background-color: #007bff;
+            border-radius: 5px;
+        }
     </style>
+    <script>
+        function toggleAdDetails() {
+            var adCheckbox = document.getElementById('change_ad_script');
+            var adOptions = document.getElementById('ad_options');
+            var minimalAdOption = document.getElementById('minimal_ad');
+            var adDetails = document.getElementById('ad_details');
+
+            if (adCheckbox.checked) {
+                adOptions.style.display = 'block';
+                minimalAdOption.checked = true; // Default to Minimal Ad (5%)
+                adDetails.style.display = 'none';
+            } else {
+                adOptions.style.display = 'none';
+                adDetails.style.display = 'none';
+            }
+        }
+
+        function handleAdOptionChange() {
+            var adOption = document.querySelector('input[name="ad_option"]:checked').value;
+            var adDetails = document.getElementById('ad_details');
+            adDetails.style.display = adOption === 'custom' ? 'block' : 'none';
+        }
+
+        function validateFileSize() {
+            var fileInput = document.getElementById('video');
+            var file = fileInput.files[0];
+            if (file.size > 100 * 1024 * 1024) {
+                alert('File size must be less than 100 MB');
+                fileInput.value = '';
+                return false;
+            }
+            return true;
+        }
+
+        function uploadFile(event) {
+            event.preventDefault();
+            if (!validateFileSize()) {
+                return;
+            }
+
+            var form = event.target;
+            var formData = new FormData(form);
+            var xhr = new XMLHttpRequest();
+
+            xhr.upload.addEventListener('progress', function(e) {
+                var percent = (e.loaded / e.total) * 100;
+                var progressBar = document.getElementById('progress-bar');
+                progressBar.style.width = percent + '%';
+            });
+
+            xhr.addEventListener('load', function() {
+                if (xhr.status === 200) {
+                    var responseUrl = xhr.responseText;
+                    window.location.href = responseUrl;
+                } else {
+                    alert('Upload failed. Please try again.');
+                }
+            });
+
+            xhr.open('POST', '/upload');
+            document.getElementById('progress-container').style.display = 'block';
+            xhr.send(formData);
+        }
+    </script>
 </head>
-
 <body>
-    <h1>Upload Video</h1>
-    <input type="file" id="fileInput" accept="video/mp4">
-    <button onclick="uploadFile()">Upload</button>
-
-    <div id="loading">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Loading_icon.gif" alt="Loading..." />
-    </div>
-    <div id="progressDiv">
-        <progress id="progressBar" value="0" max="100" style="width:100%;"></progress>
+    <div class="container">
+        <h1>Upload Video</h1>
+        <form action="/upload" method="post" enctype="multipart/form-data" onsubmit="uploadFile(event)">
+            <div class="form-group">
+                <label for="video">Video File (MP4 only, max 100 MB):</label>
+                <input type="file" name="video" id="video" accept=".mp4" required onchange="validateFileSize()">
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="make_public" id="make_public">
+                <label for="make_public">Make public in archive</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="change_ad_script" id="change_ad_script" onclick="toggleAdDetails()">
+                <label for="change_ad_script">Change Ad Format</label>
+            </div>
+            <div id="ad_options" class="ad-options">
+                <div class="form-group">
+                    <input type="radio" name="ad_option" value="minimal" id="minimal_ad" onclick="handleAdOptionChange()">
+                    <label for="minimal_ad">Minimal Ad (5%)</label>
+                </div>
+                <div class="form-group">
+                    <input type="radio" name="ad_option" value="custom" id="custom_ad" onclick="handleAdOptionChange()">
+                    <label for="custom_ad">Custom Ad</label>
+                </div>
+            </div>
+            <div id="ad_details" class="ad-details">
+                <div class="form-group">
+                    <label for="ad_script">JS Ad Script:</label>
+                    <textarea name="ad_script" id="ad_script" rows="4" placeholder="Paste your JS ad script here..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="ad_position">Ad Position:</label>
+                    <select name="ad_position" id="ad_position">
+                        <option value="body" selected>Body</option>
+                        <option value="head">Head</option>
+                    </select>
+                </div>
+            </div>
+            <div id="progress-container">
+                <div id="progress-bar"></div>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Upload">
+            </div>
+        </form>
     </div>
 </body>
 </html>

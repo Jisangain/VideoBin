@@ -1,7 +1,6 @@
 import random
 import string
 from flask import Flask, render_template, render_template_string, request, redirect, url_for
-from flask import jsonify
 import json
 import os
 from random import randint
@@ -11,15 +10,15 @@ app.secret_key = 'udsgoyfundgofcyadspijhorfaisgfsai8dygpd'
 UPLOAD_FOLDER = 'static/videos'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-data = {}
+shorturl = {}
 
 with open('shortenlink.json', 'r') as file:
-    data = json.load(file)
+    shorturl = json.load(file)
 def write_shorturl(key, value, filename='shortenlink.json'):
-    global data
-    data[key] = value
+    global shorturl
+    shorturl[key] = value
     with open('shortenlink.json', 'w') as file:
-        json.dump(data, file, indent=4)
+        json.dump(shorturl, file, indent=4)
 
 adinfo = {}
 with open('adinfo.json', 'r') as file:
@@ -41,6 +40,10 @@ def write_track(latest_track, filename='track_uses.json'):
 
 
 upload_status = {} # {filename: status, filename: status, ...}
+#if shorturl is start with /static/videos/ then upload_status is 'uploaded'
+for key, value in shorturl.items():
+    if value.startswith('/static/videos/'):
+        upload_status[key + '.mp4'] = 'uploaded'
 # http://127.0.0.1:5000/static/videos/Rhla4.mp4
 # Route to render the upload form
 @app.route('/upload', methods=['GET', 'POST'])
@@ -77,25 +80,28 @@ def upload():
             write_shorturl(random_filename[:-4], "/static/videos/"+random_filename)
             return video_url
 
-    return render_template('upload2.html')
+    return render_template('upload.html')
 
+
+# This is made for free service of pythonanywhere to upload video
+# You must run flask_app.py locally or somewhere else to upload video
 @app.route('/catupload', methods=['POST', 'GET'])
-def UploadStatus():
-    print(upload_status)
-    if request.method == 'POST':
+def UploadStatus():    
+    if request.method == 'GET':
+        for key in upload_status:
+            if upload_status[key] == 'uploaded' or upload_status[key] == 'sending':
+                return key
+        return "NULL"
+    elif request.method == 'POST':
         req = request.json
+
         request_type = req['type']
-        if request_type == 'check':
-            for key in upload_status:
-                if upload_status[key] == 'uploaded':
-                    return key
-            return "NULL"
-        if request_type == 'accepted':
-            name = req['name']
+        name = req['name']
+
+        if request_type == 'accepted' and name in upload_status:
             upload_status[name] = 'sending'
             return 'sending'
-        if request_type == 'done':
-            name = req['name']
+        if request_type == 'done' and name in upload_status:
             new_url = req['url']
             write_shorturl(name[:-4], new_url)
             os.remove(os.path.join('static/videos', name))
@@ -115,7 +121,7 @@ def policy():
 
 @app.route('/archive')
 def archive():
-    sorted_data = dict(sorted(data.items()))
+    sorted_data = dict(sorted(shorturl.items()))
     return render_template('archive.html', sorted_data=sorted_data)
 
 @app.route('/v')
@@ -157,13 +163,12 @@ def view_video(filename):
     global track_interval
     global last_track
     global recent_tracks
-    global data
+    global shorturl
     redirecttype = False
     if filename[-4:] == ".mp4":
         filename = filename[:-4]
         redirecttype = True
-    if filename not in data or filename == "nothing":
-        print("a")
+    if filename not in shorturl or filename == "nothing":
         return render_template('player2.html', selected_video="/static/nothing")
 
     if filename in recent_tracks:
@@ -185,7 +190,14 @@ def view_video(filename):
 
 
     if redirecttype == True:
-        actual_link = data[filename]
+        actual_link = shorturl[filename]
+        if filename not in adinfo:
+            x = randint(0, 3)
+            if x == 0:
+                return render_template('player.html', selected_video=actual_link)
+            else:
+                return render_template('player_custom.html', selected_video=actual_link, ad_script="", ad_position="")
+
         info = adinfo[filename]
         if info['change_ad_script'] == True:
             rand = randint(0, 100)
@@ -216,7 +228,7 @@ def view_video(filename):
         top_10 = dict(sorted(top_10.items(), key=lambda x: x[1], reverse=True)[:10])
 
 
-    actual_link = data[filename]
+    actual_link = shorturl[filename]
     return render_template('player2.html', selected_video=actual_link)
 
 

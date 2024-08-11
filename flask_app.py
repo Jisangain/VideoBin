@@ -1,12 +1,10 @@
 import requests
 import time
 #http://127.0.0.1:5000/static/videos/Rhla4.mp4
-while True:
-    time.sleep(8)
+while True:    
     origin = "http://127.0.0.1:5000"
     url = origin + "/catupload"
-    data = {"type": "check"}
-    response = requests.post(url, json=data)
+    response = requests.get(url)
     if response.status_code == 200:
         if response.text == "NULL":
             print("No video to upload")
@@ -21,7 +19,7 @@ while True:
                     files = {
                         'reqtype': (None, 'urlupload'),
                         'userhash': (None, "da98f6c298dce1186854a1bfe"),
-                        'url':(None,"https://qu.ax/QTkh.mp4") #video_path
+                        'url':(None,video_path) #video_path
                     }
 
                     response = requests.post('https://catbox.moe/user/api.php', files=files)
@@ -45,3 +43,4 @@ while True:
                 print("Error:", response.status_code)
     else:
         print("Error:", response.status_code)
+    time.sleep(60)

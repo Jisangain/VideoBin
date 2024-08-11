@@ -57,5 +57,13 @@
         "ad_option": "custom",
         "ad_script": "hello2",
         "ad_position": "head"
+    },
+    "O7s2P": {
+        "is_public": false,
+        "change_ad_script": false
+    },
+    "gI0lA": {
+        "is_public": false,
+        "change_ad_script": false
     }
 }
