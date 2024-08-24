@@ -2,4 +2,3 @@
 static/videos/*
 templates/test.html
 __pycache__/
-!static/videos/.gitkeep
