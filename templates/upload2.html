@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Video</title>
+    <title>Add Video to {{name}}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -31,10 +31,7 @@
             display: block;
             margin-bottom: 5px;
         }
-        input[type="file"],
-        input[type="text"],
-        textarea,
-        select {
+        input[type="file"] {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
@@ -52,22 +49,6 @@
         input[type="submit"]:hover {
             background-color: #0056b3;
         }
-        .checkbox-group {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        .checkbox-group input[type="checkbox"] {
-            margin-right: 10px;
-        }
-        .ad-options {
-            display: none;
-            margin-top: 10px;
-        }
-        .ad-details {
-            display: none;
-            margin-top: 10px;
-        }
         #progress-container {
             display: none;
             width: 100%;
@@ -84,28 +65,6 @@
         }
     </style>
     <script>
-        function toggleAdDetails() {
-            var adCheckbox = document.getElementById('add_ad_script');
-            var adOptions = document.getElementById('ad_options');
-            var minimalAdOption = document.getElementById('minimal_ad');
-            var adDetails = document.getElementById('ad_details');
-
-            if (adCheckbox.checked) {
-                adOptions.style.display = 'block';
-                minimalAdOption.checked = true; // Default to Minimal Ad (5%)
-                adDetails.style.display = 'none';
-            } else {
-                adOptions.style.display = 'none';
-                adDetails.style.display = 'none';
-            }
-        }
-
-        function handleAdOptionChange() {
-            var adOption = document.querySelector('input[name="ad_option"]:checked').value;
-            var adDetails = document.getElementById('ad_details');
-            adDetails.style.display = adOption === 'custom' ? 'block' : 'none';
-        }
-
         function validateFileSize() {
             var fileInput = document.getElementById('video');
             var file = fileInput.files[0];
@@ -142,7 +101,7 @@
                 }
             });
 
-            xhr.open('POST', '/upload');
+            xhr.open('POST', form.action);
             document.getElementById('progress-container').style.display = 'block';
             xhr.send(formData);
         }
@@ -150,42 +109,11 @@
 </head>
 <body>
     <div class="container">
-        <h1>Upload Video</h1>
-        <form action="/upload" method="post" enctype="multipart/form-data" onsubmit="uploadFile(event)">
+        <h1>Upload Video to {{name}}</h1>
+        <form action="{{ url_for('add_entry', prefix=prefix) }}" method="post" enctype="multipart/form-data" onsubmit="uploadFile(event)">
             <div class="form-group">
                 <label for="video">Video File (MP4 only, max 100 MB):</label>
                 <input type="file" name="video" id="video" accept=".mp4" required onchange="validateFileSize()">
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="make_public" id="make_public">
-                <label for="make_public">Make public in archive</label>
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" name="add_ad_script" id="add_ad_script" onclick="toggleAdDetails()">
-                <label for="add_ad_script">Change Ad Format</label>
-            </div>
-            <div id="ad_options" class="ad-options">
-                <div class="form-group">
-                    <input type="radio" name="ad_option" value="minimal" id="minimal_ad" onclick="handleAdOptionChange()">
-                    <label for="minimal_ad">Minimal Ad (5%)</label>
-                </div>
-                <div class="form-group">
-                    <input type="radio" name="ad_option" value="custom" id="custom_ad" onclick="handleAdOptionChange()">
-                    <label for="custom_ad">Custom Ad</label>
-                </div>
-            </div>
-            <div id="ad_details" class="ad-details">
-                <div class="form-group">
-                    <label for="ad_script">JS Ad Script:</label>
-                    <textarea name="ad_script" id="ad_script" rows="4" placeholder="Paste your JS ad script here..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="ad_position">Ad Position:</label>
-                    <select name="ad_position" id="ad_position">
-                        <option value="body" selected>Body</option>
-                        <option value="head">Head</option>
-                    </select>
-                </div>
             </div>
             <div id="progress-container">
                 <div id="progress-bar"></div>

@@ -1,51 +1,83 @@
-import random
 import string
-from flask import Flask, render_template, render_template_string, request, redirect, url_for
-import json
+from flask import Flask, render_template, request, redirect, url_for, render_template_string
+from flask_sqlalchemy import SQLAlchemy
+import random
 import os
 from random import randint
-import time
 app = Flask(__name__)
-app.secret_key = 'udsgoyfundgofcyadspijhorfaisgfsai8dygpd'
-UPLOAD_FOLDER = 'static/videos'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:pass@localhost/flaskapp'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_recycle' : 280}
+app.config['UPLOAD_FOLDER'] = 'static/videos'
 
-shorturl = {}
-
-with open('shortenlink.json', 'r') as file:
-    shorturl = json.load(file)
-def write_shorturl(key, value, filename='shortenlink.json'):
-    global shorturl
-    shorturl[key] = value
-    with open('shortenlink.json', 'w') as file:
-        json.dump(shorturl, file, indent=4)
-
-adinfo = {}
-with open('adinfo.json', 'r') as file:
-    adinfo = json.load(file)
-def write_adinfo(key, value, filename='adinfo.json'):
-    global adinfo
-    adinfo[key] = value
-    with open('adinfo.json', 'w') as file:
-        json.dump(adinfo, file, indent=4)
-
-
-track_uses = {} # {time: [(filename, count), (filename, count),...], time: [(filename, count), (filename, count),...], ...}
-with open('track_uses.json', 'r') as file:
-    track_uses = json.load(file)
-def write_track(latest_track, filename='track_uses.json'):
-    with open('track_uses.json', 'w') as file:
-        json.dump(latest_track, file, indent=4)
+db = SQLAlchemy(app)
 
 
 
-upload_status = {} # {filename: status, filename: status, ...}
-#if shorturl is start with /static/videos/ then upload_status is 'uploaded'
-for key, value in shorturl.items():
-    if value.startswith('/static/videos/'):
-        upload_status[key + '.mp4'] = 'uploaded'
-# http://127.0.0.1:5000/static/videos/Rhla4.mp4
-# Route to render the upload form
+class Base(db.Model):
+    baseurl = db.Column(db.String(80), primary_key=True)
+    mainurl = db.Column(db.String(80), nullable=False)
+    make_public = db.Column(db.Boolean, nullable=False)
+    change_ad_script = db.Column(db.Boolean, nullable=False)
+    link_type = db.Column(db.Integer, nullable=False)
+
+    name = db.Column(db.String(80))
+    ad_option = db.Column(db.Boolean)
+    ad_script = db.Column(db.String(300))
+    position = db.Column(db.Integer)
+    count = db.Column(db.Integer)
+    user = db.Column(db.String(80))
+    def __repr__(self):
+        return f'<Base {self.baseurl}>'
+
+# Add data to table
+def insert_data(baseurl, mainurl, make_public = 0, change_ad_script = 0, link_type = 0, name = '', ad_option = 0, ad_script = '', position = 0):
+    new_entry = Base(baseurl=baseurl, mainurl=mainurl, make_public=make_public,
+                     change_ad_script=change_ad_script, link_type=link_type, name=name, ad_option=ad_option,
+                     ad_script=ad_script, position=position)
+    db.session.add(new_entry)
+    db.session.commit()
+
+# Get single data
+def get_single_data(baseurl):
+    return db.session.get(Base, baseurl)
+
+upload_status = {}
+
+with app.app_context():
+    upload_status = {}
+    local_urls = Base.query.filter(Base.mainurl.like(f'{"/static/videos/"}%')).all()
+    for url in local_urls:
+        upload_status[url.baseurl + '.mp4'] = 'uploaded'
+
+@app.route('/catupload', methods=['POST', 'GET'])
+def UploadStatus():
+    if request.method == 'GET':
+        for key in upload_status:
+            if upload_status[key] == 'uploaded' or upload_status[key] == 'sending':
+                return key
+        return "NULL"
+    elif request.method == 'POST':
+        req = request.json
+
+        request_type = req['type']
+        name = req['name']
+
+        if request_type == 'accepted' and name in upload_status:
+            upload_status[name] = 'sending'
+            return 'sending'
+        if request_type == 'done' and name in upload_status:
+            new_url = req['url']
+            base_entry = Base.query.get(name[:-4])
+            if base_entry:
+                base_entry.mainurl = new_url
+                db.session.commit()
+                os.remove(os.path.join('static/videos', name))
+                del upload_status[name]
+                return 'added'
+            return 'added'
+    return "Invalid request", 400
+
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
@@ -67,82 +99,137 @@ def upload():
                     ad_script = ad_script[8:-9]
                 else:
                     change_ad_script = False
-                    
+
+            #random_filename[:-4]
             if change_ad_script == False:
-                write_adinfo(random_filename[:-4], {'is_public':make_public, 'change_ad_script': change_ad_script})
+                insert_data(random_filename[:-4], '/static/videos/'+random_filename, make_public, change_ad_script)
             elif ad_option == "minimal":
-                write_adinfo(random_filename[:-4], {'is_public':make_public, 'change_ad_script': change_ad_script, 'ad_option': ad_option})
+                insert_data(random_filename[:-4], '/static/videos/'+random_filename, make_public, change_ad_script, 0, '', 0)
             else:
-                write_adinfo(random_filename[:-4], {'is_public':make_public, 'change_ad_script': change_ad_script, 'ad_option': ad_option, 'ad_script': ad_script, 'ad_position': ad_position})
-            
+                insert_data(random_filename[:-4], '/static/videos/'+random_filename, make_public, change_ad_script, 0, '', 1, ad_script, ad_position)
+
             video_url = url_for('view_video', filename=random_filename)
-            
-            write_shorturl(random_filename[:-4], "/static/videos/"+random_filename)
             return video_url
 
     return render_template('upload.html')
 
-
-# This is made for free service of pythonanywhere to upload video
-# You must run flask_app.py locally or somewhere else to upload video
-@app.route('/catupload', methods=['POST', 'GET'])
-def UploadStatus():    
-    if request.method == 'GET':
-        for key in upload_status:
-            if upload_status[key] == 'uploaded' or upload_status[key] == 'sending':
-                return key
-        return "NULL"
-    elif request.method == 'POST':
-        req = request.json
-
-        request_type = req['type']
-        name = req['name']
-
-        if request_type == 'accepted' and name in upload_status:
-            upload_status[name] = 'sending'
-            return 'sending'
-        if request_type == 'done' and name in upload_status:
-            new_url = req['url']
-            write_shorturl(name[:-4], new_url)
-            os.remove(os.path.join('static/videos', name))
-            del upload_status[name]
-            return 'added'
-    return "Invalid request", 400
+@app.route('/newvideolist', methods=['GET', 'POST'])
+def newvideolist():
+    if request.method == 'POST':
+        random_filename = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(5))
+        name = request.form.get('name', random_filename)
+        make_public = 'make_public' in request.form
+        change_ad_script = 'change_ad_script' in request.form
+        ad_option = request.form.get('ad_option', '')
+        ad_script = request.form.get('ad_script', '')
+        ad_position = request.form.get('ad_position', '')
 
 
+        if ad_option == "custom":
+            ad_option = 1
+            ad_script = ad_script.strip()
+            if len(ad_script)<=100 and ad_script.startswith("<script>") and ad_script.endswith("</script>") and ad_script.count("script") == 2:
+                ad_script = ad_script[8:-9]
+            else:
+                ad_script = ''
+                change_ad_script = False
+        else:
+            ad_option = 0
+        if ad_position == "body":
+            ad_position = 0
+        else:
+            ad_position = 1
 
-@app.route('/')
-def index():
-    return render_template('home.html')
+        insert_data(random_filename, '/m/' + random_filename, make_public, change_ad_script, 1, name, ad_option, ad_script, ad_position)
+        print(name, make_public, change_ad_script, ad_option, ad_script, ad_position)
+        return redirect("/edit/"+random_filename)
 
-@app.route('/upload-policy')
-def policy():
-    return render_template('policy.html')
+    return render_template('newvideolist.html')
 
-@app.route('/archive')
-def archive():
-    sorted_data = dict(sorted(shorturl.items()))
-    return render_template('archive.html', sorted_data=sorted_data)
+@app.route('/m/<prefix>')
+def show_entries(prefix):
+    prefix_info = get_single_data(prefix)
+    if not prefix_info or prefix_info.link_type != 1:
+        return f'Invalid URL'
+    entries = Base.query.filter(Base.baseurl.like(f'{prefix}%')).all()
+    return render_template('show_entries.html', prefix = prefix_info, entries=entries)
 
-@app.route('/v')
-def nothing():
-    return redirect('/v/nothing')
+@app.route('/edit/<prefix>', methods=['GET', 'POST'])
+def add_entry(prefix):
+    prefix_info = get_single_data(prefix)
+    if not prefix_info or prefix_info.link_type != 1:
+        return f'Invalid URL'
+    if request.method == 'POST':
 
+        video = request.files['video']
+        if video and video.filename.endswith('.mp4'):
+            last_entry = Base.query.filter(Base.baseurl.like(f'{prefix}%')).order_by(Base.baseurl.desc()).first()
+            if last_entry:
+                if len(last_entry.baseurl[len(prefix):]) == 0:
+                    last_number = 0
+                else:
+                    last_number = int(last_entry.baseurl[len(prefix):])
+                new_number = last_number + 1
+            else:
+                new_number = 0
+            new_baseurl = f'{prefix}{new_number:03}'
 
-track_time = 3*60*60 # 3 hours, remove all time entries older than this
-track_interval = 10*60 # 10 minutes, how often add a new time entry and remove old ones
-last_track = time.time()  # last time a new time entry was added
-recent_tracks = {} # {filename: count, filename: count, ...}
+            random_filename = new_baseurl + '.mp4'
+            video_path = os.path.join(app.config['UPLOAD_FOLDER'], random_filename)
+            video.save(video_path)
+            upload_status[random_filename] = 'uploaded'
+            video_url = url_for('view_video', filename=random_filename)
+            insert_data(new_baseurl, "/static/videos/"+random_filename)
+            return video_url
+        else:
+            return 'Invalid file'
+    return render_template('upload2.html', name=prefix_info.name, prefix=prefix)
+
+@app.route('/v/<filename>')
+def view_video(filename):
+    redirecttype = False
+    if filename[-4:] == ".mp4":
+        filename = filename[:-4]
+        redirecttype = True
+    video = get_single_data(filename)
+    if not video:
+        return f'Invalid URL'
+    video_info = get_single_data(filename[:-3])
+    if not video_info:
+        video_info = video
+
+    actual_link = video.mainurl
+    if redirecttype == True:
+        if video_info.change_ad_script == False:
+            return render_template('player.html', selected_video=actual_link)
+        if video_info.change_ad_script == True:
+            rand = randint(0, 100)
+            if video_info.ad_option == 0:
+                if rand<5:
+                    return render_template('player.html', selected_video=actual_link)
+                else:
+                    return render_template('player_custom.html', selected_video=actual_link, ad_script="", ad_position="")
+            elif video_info.ad_option == 1:
+                if rand<5:
+                    return render_template('player.html', selected_video=actual_link)
+                else:
+                    if video_info.position == 1:
+                        return render_template('player_custom.html', selected_video=actual_link, headscript=video_info.ad_script, bodyscript="")
+                    elif video_info.position == 0:
+                        return render_template('player_custom.html', selected_video=actual_link, headscript="", bodyscript=video_info.ad_script)
+        return render_template('player.html', selected_video=actual_link)
+    return render_template('player2.html', selected_video=actual_link)
 
 @app.route('/add', methods=['GET', 'POST'])
 def addurl():
     if request.method == 'POST':
         user_input = request.form['user_input']
-        if "http" in user_input:
-            # generate 5 random characters
+        if "http" in user_input and user_input.endswith('.mp4'):
             random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
-            write_shorturl(random_string, user_input)
+            insert_data(random_string, user_input)
             return redirect('/v/' + random_string + ".mp4")
+        else:
+            return "Invalid URL. Please provide a valid URL ending with '.mp4'."
     return render_template_string('''
         <!doctype html>
         <title>Input Form</title>
@@ -153,86 +240,15 @@ def addurl():
         </form>
     ''')
 
-
-
-@app.route('/v/<filename>')
-def view_video(filename):
-
-    global track_uses
-    global track_time
-    global track_interval
-    global last_track
-    global recent_tracks
-    global shorturl
-    redirecttype = False
-    if filename[-4:] == ".mp4":
-        filename = filename[:-4]
-        redirecttype = True
-    if filename not in shorturl or filename == "nothing":
-        return render_template('player2.html', selected_video="/static/nothing")
-
-    if filename in recent_tracks:
-        recent_tracks[filename] += 1
-    else:
-        recent_tracks[filename] = 1
-
-    if time.time() - last_track > track_interval:
-        timenow = time.time()
-        track_uses[timenow] = []
-        for key in recent_tracks:
-            track_uses[timenow].append((key, recent_tracks[key]))
-        recent_tracks = {}
-        for key in list(track_uses.keys()):
-            if timenow - float(key) > track_time:
-                del track_uses[key]
-        write_track(track_uses)
-
-
-
-    if redirecttype == True:
-        actual_link = shorturl[filename]
-        if filename not in adinfo:
-            x = randint(0, 3)
-            if x == 0:
-                return render_template('player.html', selected_video=actual_link)
-            else:
-                return render_template('player_custom.html', selected_video=actual_link, ad_script="", ad_position="")
-
-        info = adinfo[filename]
-        if info['change_ad_script'] == True:
-            rand = randint(0, 100)
-            if info['ad_option'] == "minimal":
-                if rand<5:
-                    return render_template('player.html', selected_video=actual_link)
-                else:
-                    return render_template('player_custom.html', selected_video=actual_link, ad_script="", ad_position="")
-            elif info['ad_option'] == "custom":
-                if rand<5:
-                    return render_template('player.html', selected_video=actual_link)
-                else:
-                    if info['ad_position'] == "head":
-                        return render_template('player_custom.html', selected_video=actual_link, headscript=info['ad_script'], bodyscript="")
-                    elif info['ad_position'] == "body":
-                        return render_template('player_custom.html', selected_video=actual_link, headscript="", bodyscript=info['ad_script'])
-        return render_template('player.html', selected_video=actual_link)
-
-    if time.time() - last_track > track_interval:
-        last_track = time.time()
-        top_10 = {}
-        for key in track_uses:
-            for filename, count in track_uses[key]:
-                if filename in top_10:
-                    top_10[filename] += count
-                else:
-                    top_10[filename] = count
-        top_10 = dict(sorted(top_10.items(), key=lambda x: x[1], reverse=True)[:10])
-
-
-    actual_link = shorturl[filename]
-    return render_template('player2.html', selected_video=actual_link)
-
-
-
-
+@app.route('/')
+def index():
+    return render_template('home.html')
+@app.route('/upload-policy')
+def policy():
+    return render_template('policy.html')
+@app.route('/archive')
+def archive():
+    urls = Base.query.with_entities(Base.name, Base.baseurl).filter_by(link_type=1).all()
+    return render_template('archive.html', urls=urls)
 if __name__ == '__main__':
-    app.run(debug=True,host='0.0.0.0')
+    app.run(debug=True)

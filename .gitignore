@@ -1,5 +1,3 @@
 .venv/
-track_upload.json
-track_uses.json
 static/videos/*
 templates/test.html

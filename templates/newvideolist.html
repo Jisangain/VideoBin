@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Video</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            border: none;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .ad-options {
+            display: none;
+            margin-top: 10px;
+        }
+        .ad-details {
+            display: none;
+            margin-top: 10px;
+        }
+    </style>
+    <script>
+        function toggleAdDetails() {
+            var adCheckbox = document.getElementById('change_ad_script');
+            var adOptions = document.getElementById('ad_options');
+            var minimalAdOption = document.getElementById('minimal_ad');
+            var adDetails = document.getElementById('ad_details');
+
+            if (adCheckbox.checked) {
+                adOptions.style.display = 'block';
+                minimalAdOption.checked = true; // Default to Minimal Ad (5%)
+                adDetails.style.display = 'none';
+            } else {
+                adOptions.style.display = 'none';
+                adDetails.style.display = 'none';
+            }
+        }
+
+        function handleAdOptionChange() {
+            var adOption = document.querySelector('input[name="ad_option"]:checked').value;
+            var adDetails = document.getElementById('ad_details');
+            adDetails.style.display = adOption === 'custom' ? 'block' : 'none';
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Video Information</h1>
+        <form action="/newvideolist" method="post">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" name="name" id="name" required>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="make_public" id="make_public">
+                <label for="make_public">Make public in archive</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="change_ad_script" id="change_ad_script" onclick="toggleAdDetails()">
+                <label for="change_ad_script">Change Ad Format</label>
+            </div>
+            <div id="ad_options" class="ad-options">
+                <div class="form-group">
+                    <input type="radio" name="ad_option" value="minimal" id="minimal_ad" onclick="handleAdOptionChange()">
+                    <label for="minimal_ad">Minimal Ad (5%)</label>
+                </div>
+                <div class="form-group">
+                    <input type="radio" name="ad_option" value="custom" id="custom_ad" onclick="handleAdOptionChange()">
+                    <label for="custom_ad">Custom Ad</label>
+                </div>
+            </div>
+            <div id="ad_details" class="ad-details">
+                <div class="form-group">
+                    <label for="ad_script">JS Ad Script:</label>
+                    <textarea name="ad_script" id="ad_script" rows="4" placeholder="Paste your JS ad script here..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="ad_position">Ad Position:</label>
+                    <select name="ad_position" id="ad_position">
+                        <option value="body" selected>Body</option>
+                        <option value="head">Head</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Submit">
+            </div>
+        </form>
+    </div>
+</body>
+</html>
