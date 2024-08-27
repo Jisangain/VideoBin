@@ -4,50 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video Management</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: #f4f4f4;
-        }
-        .container {
-            text-align: center;
-        }
-        .options {
-            margin: 20px 0;
-        }
-        .option {
-            display: inline-block;
-            margin: 10px;
-            padding: 20px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            text-decoration: none;
-            color: #333;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.3s;
-        }
-        .option:hover {
-            background-color: #e9e9e9;
-        }
-        .policy-link {
-            margin-top: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="static/home.css">
 </head>
 <body>
     <div class="container">
-        <h1>Video Management</h1>
+        <h1 class="typing-animation">Video Management</h1>
         <div class="options">
-            <a href="/upload" class="option">Upload Videos</a>
-            <a href="/archive" class="option">Archive Videos</a>
+            <a href="/upload" class="option fire-button">
+                Upload Videos
+                <img src="static/icons/up.png" alt="Upload Icon" class="button-icon"> <!-- Icon on the right -->
+            </a>
+            <a href="/archive" class="option fire-button">
+                Archive Videos
+                <img src="static/icons/arch.png" alt="Archive Icon" class="button-icon"> <!-- Icon on the right -->
+            </a>
         </div>
         <div class="policy-link">
             <a href="/upload-policy">Upload Policy</a>

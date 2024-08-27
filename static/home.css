@@ -1,0 +1,139 @@
+@font-face {
+    font-family: 'MyCustomFont';
+    src: url('fonts/cyberverse/Cyberverse.otf') format('truetype');
+}
+
+.fire-button {
+    font-family: 'MyCustomFont', Arial, sans-serif;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #000;
+    color: #fff;
+}
+
+.container {
+    text-align: center;
+}
+
+.options {
+    margin: 20px 0;
+}
+
+.option {
+    display: inline-block;
+    margin: 10px;
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #333;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s;
+}
+
+.fire-button {
+    position: relative;
+    color: #fff;
+    background: linear-gradient(45deg, #ff6a00, #ee0979);
+    border: none;
+    overflow: hidden;
+    box-shadow: 0 0 15px #ff6a00;
+    transition: box-shadow 0.5s, transform 0.5s;
+}
+
+.fire-button:before, .fire-button:after {
+    content: '';
+    position: absolute;
+    width: 300%;
+    height: 300%;
+    top: -100%;
+    left: -100%;
+    background: linear-gradient(45deg, #ff6a00, #ee0979);
+    transition: all 0.7s;
+    z-index: -1;
+    animation: fire 1s infinite;
+}
+
+.fire-button:hover {
+    box-shadow: 0 0 25px #ff6a00, 0 0 50px #ff6a00, 0 0 100px #ff6a00;
+    transform: scale(1.1);
+}
+
+.fire-button:hover:before {
+    top: 0;
+    left: 0;
+}
+
+.fire-button:hover:after {
+    top: 0;
+    left: 0;
+}
+
+.button-icon {
+    width: 48px;
+    height: 48px;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+@keyframes fire {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@font-face {
+    font-family: 'Aexir';
+    src: url('fonts/Aexir/Aexir.otf') format('truetype');
+}
+
+.typing-animation {
+    font-family: 'Aexir', Arial, sans-serif;
+    font-size: 2em;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    border-right: 0.1em solid white;
+    display: inline-block;
+    width: max-content;
+    animation:
+        typing 13s steps(16, end) infinite,
+        blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+    0% {
+        width: 0;
+    }
+    40% {
+        width: 16ch;
+    }
+    60% {
+        width: 16ch;
+    }
+    100% {
+        width: 0;
+    }
+}
+
+@keyframes blink-caret {
+    0%, 100% {
+        border-color: transparent;
+    }
+    50% {
+        border-color: white;
+    }
+}
+
+.policy-link {
+    margin-top: 20px;
+}
