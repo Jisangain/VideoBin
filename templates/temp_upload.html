@@ -52,6 +52,14 @@
         input[type="submit"]:hover {
             background-color: #0056b3;
         }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+        }
         #progress-container {
             display: none;
             width: 100%;
@@ -65,16 +73,6 @@
             height: 20px;
             background-color: #007bff;
             border-radius: 5px;
-        }
-        .slider-container {
-            margin-top: 20px;
-        }
-        .slider {
-            width: 100%;
-        }
-        #adPercentage {
-            font-size: 1.5em;
-            margin-bottom: 10px;
         }
     </style>
     <script>
@@ -118,12 +116,6 @@
             document.getElementById('progress-container').style.display = 'block';
             xhr.send(formData);
         }
-
-        function updateAdPercentage() {
-            const slider = document.getElementById('adSlider');
-            const percentage = document.getElementById('adPercentage');
-            percentage.textContent = slider.value + '%';
-        }
     </script>
 </head>
 <body>
@@ -134,17 +126,13 @@
                 <label for="video">Video File (MP4 only, max 100 MB):</label>
                 <input type="file" name="video" id="video" accept=".mp4" required onchange="validateFileSize()">
             </div>
+            <div class="checkbox-group">
+                <input type="checkbox" name="make_public" id="make_public">
+                <label for="make_public">Make public in archive</label>
+            </div>
             <div id="progress-container">
                 <div id="progress-bar"></div>
             </div>
-
-            <!-- Advertisement Control Slider -->
-            <div class="slider-container">
-                <label for="adSlider">Advertisement Control:</label>
-                <div id="adPercentage">50%</div>
-                <input type="range" min="0" name = "percent" max="100" value="50" class="slider" id="adSlider" oninput="updateAdPercentage()">
-            </div>
-
             <div class="form-group">
                 <input type="submit" value="Upload">
             </div>
