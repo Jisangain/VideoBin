@@ -1,15 +1,15 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-
+from . import credentials
 db = SQLAlchemy()
 upload_status = {}
 
-
+print('Creating app')
 def create_app():
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = 'secret-key-goes-here'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqldb://root:123456ABC.@localhost/flaskapp'
+    app.config['SECRET_KEY'] = credentials.secret_key
+    app.config['SQLALCHEMY_DATABASE_URI'] = credentials.sql_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_recycle' : 280}
     app.config['UPLOAD_FOLDER'] = 'static/videos'

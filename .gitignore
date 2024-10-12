@@ -2,3 +2,4 @@
 static/videos/*
 templates/test.html
 __pycache__/
+monetag_token.txt

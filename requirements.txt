@@ -3,3 +3,4 @@ mysqlclient
 flask_sqlalchemy
 requests
 flask_login
+python-dotenv

@@ -1,7 +1,8 @@
-from flask import current_app, Blueprint, render_template
+from flask import Blueprint, render_template
 import os
 from . import db
 from .models import Base
+from random import randint
 
 current_directory = os.getcwd()
 items = os.listdir(current_directory)
@@ -38,23 +39,14 @@ def view_video(filename):
         video_info = video
 
     actual_link = video.mainurl
+    random = randint(1, 100)
     if redirecttype == True:
-        #if video_info.change_ad_script == False:
-        return render_template('player.html', selected_video=actual_link)
-        """if video_info.change_ad_script == True:
-            rand = randint(0, 100)
-            if video_info.ad_option == 0:
-                if rand<5:
-                    return render_template('player.html', selected_video=actual_link)
-                else:
-                    return render_template('player_custom.html', selected_video=actual_link, ad_script="", ad_position="")
-            elif video_info.ad_option == 1:
-                if rand<5:
-                    return render_template('player.html', selected_video=actual_link)
-                else:
-                    if video_info.position == 1:
-                        return render_template('player_custom.html', selected_video=actual_link, headscript=video_info.ad_script, bodyscript="")
-                    elif video_info.position == 0:
-                        return render_template('player_custom.html', selected_video=actual_link, headscript="", bodyscript=video_info.ad_script)
-        return render_template('player.html', selected_video=actual_link)"""
-    return render_template('player2.html', selected_video=actual_link)
+        if video_info.ad_percent >= random:
+            return render_template('player_ad.html', selected_video=actual_link)
+        else:
+            return render_template('player.html', selected_video=actual_link)
+    else:
+        if video_info.ad_percent >= random:
+            return render_template('player2_ad.html', selected_video=actual_link)
+        else:
+            return render_template('player2.html', selected_video=actual_link)

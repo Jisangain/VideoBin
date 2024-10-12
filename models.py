@@ -25,7 +25,7 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(100))
     btc_address = db.Column(db.String(100))
     usd_balance = db.Column(db.Float)
-    creation_date = db.Column(db.DateTime)
+    creation_date = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     def __repr__(self):
         return f'<User {self.email}>'
@@ -38,7 +38,7 @@ class countlog(db.Model):
     usd_balance = db.Column(db.Float, nullable=False)
 
     def __repr__(self):
-        return f'<adlog {self.time}>'
+        return f'<countlog {self.time}>'
 
 class distributionlog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -47,7 +47,7 @@ class distributionlog(db.Model):
     usd_balance = db.Column(db.Float, nullable=False)
 
     def __repr__(self):
-        return f'<distributelog {self.usd_balance}>'
+        return f'<distributionlog {self.usd_balance}>'
 
 class IPAccess(db.Model):
     ip = db.Column(db.String(45), primary_key=True)  # IPv6-compatible
