@@ -68,7 +68,7 @@ def upload_video():
             upload_status[random_filename] = 'uploaded'            
 
             video_url = url_for('view_videos.view_video', filename=random_filename)
-            return video_url
+            return video_url[:-4]
     return render_template('upload.html')
 
 @upload.route('/newvideolist', methods=['GET', 'POST'])

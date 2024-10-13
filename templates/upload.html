@@ -1,154 +1,130 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Video</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            background-color: #f4f4f4;
+{% extends 'base.html' %}
+{% block content %}
+<div class="container has-text-centered">
+    <h1 class="title">Upload Video</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data" onsubmit="uploadFile(event)">
+        <div class="form-group">
+            <label for="video">Video File (MP4 only, max 100 MB):</label>
+            <input type="file" name="video" id="video" accept=".mp4" required onchange="validateFileSize()">
+        </div>
+        <div id="progress-container" style="display: none;">
+            <div id="progress-bar" style="height: 20px; background-color: #007bff; border-radius: 5px;"></div>
+        </div>
+
+        <!-- Advertisement Control Slider -->
+        <div class="slider-container">
+            <label for="adSlider">Advertisement Control:</label>
+            <div id="adPercentage">50%</div>
+            <input type="range" min="0" name="percent" max="100" value="50" class="slider" id="adSlider" oninput="updateAdPercentage()">
+        </div>
+
+        <div class="form-group">
+            <input type="submit" class="button is-primary" value="Upload">
+        </div>
+    </form>
+</div>
+
+<style>
+    /* Custom styles for the upload page */
+    .container {
+        background-color: #000000;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    label {
+        display: block;
+        margin-bottom: 5px;
+    }
+    input[type="file"],
+    input[type="text"],
+    textarea,
+    select {
+        width: 100%;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        box-sizing: border-box;
+    }
+    input[type="submit"] {
+        padding: 10px 20px;
+        background-color: #007bff;
+        border: none;
+        color: #fff;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    input[type="submit"]:hover {
+        background-color: #0056b3;
+    }
+    #progress-container {
+        width: 100%;
+        background-color: #f3f3f3;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        margin-top: 10px;
+    }
+    .slider-container {
+        margin-top: 20px;
+    }
+    .slider {
+        width: 100%;
+    }
+    #adPercentage {
+        font-size: 1.5em;
+        margin-bottom: 10px;
+    }
+</style>
+
+<script>
+    function validateFileSize() {
+        var fileInput = document.getElementById('video');
+        var file = fileInput.files[0];
+        if (file.size > 100 * 1024 * 1024) {
+            alert('File size must be less than 100 MB');
+            fileInput.value = '';
+            return false;
         }
-        .container {
-            text-align: center;
-            padding: 20px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        return true;
+    }
+
+    function uploadFile(event) {
+        event.preventDefault();
+        if (!validateFileSize()) {
+            return;
         }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input[type="file"],
-        input[type="text"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-        input[type="submit"] {
-            padding: 10px 20px;
-            background-color: #007bff;
-            border: none;
-            color: #fff;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        input[type="submit"]:hover {
-            background-color: #0056b3;
-        }
-        #progress-container {
-            display: none;
-            width: 100%;
-            background-color: #f3f3f3;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            margin-top: 10px;
-        }
-        #progress-bar {
-            width: 0;
-            height: 20px;
-            background-color: #007bff;
-            border-radius: 5px;
-        }
-        .slider-container {
-            margin-top: 20px;
-        }
-        .slider {
-            width: 100%;
-        }
-        #adPercentage {
-            font-size: 1.5em;
-            margin-bottom: 10px;
-        }
-    </style>
-    <script>
-        function validateFileSize() {
-            var fileInput = document.getElementById('video');
-            var file = fileInput.files[0];
-            if (file.size > 100 * 1024 * 1024) {
-                alert('File size must be less than 100 MB');
-                fileInput.value = '';
-                return false;
+
+        var form = event.target;
+        var formData = new FormData(form);
+        var xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener('progress', function(e) {
+            var percent = (e.loaded / e.total) * 100;
+            var progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = percent + '%';
+        });
+
+        xhr.addEventListener('load', function() {
+            if (xhr.status === 200) {
+                var responseUrl = xhr.responseText;
+                window.location.href = responseUrl;
+            } else {
+                alert('Upload failed. Please try again.');
             }
-            return true;
-        }
+        });
 
-        function uploadFile(event) {
-            event.preventDefault();
-            if (!validateFileSize()) {
-                return;
-            }
+        xhr.open('POST', '/upload');
+        document.getElementById('progress-container').style.display = 'block';
+        xhr.send(formData);
+    }
 
-            var form = event.target;
-            var formData = new FormData(form);
-            var xhr = new XMLHttpRequest();
-
-            xhr.upload.addEventListener('progress', function(e) {
-                var percent = (e.loaded / e.total) * 100;
-                var progressBar = document.getElementById('progress-bar');
-                progressBar.style.width = percent + '%';
-            });
-
-            xhr.addEventListener('load', function() {
-                if (xhr.status === 200) {
-                    var responseUrl = xhr.responseText;
-                    window.location.href = responseUrl;
-                } else {
-                    alert('Upload failed. Please try again.');
-                }
-            });
-
-            xhr.open('POST', '/upload');
-            document.getElementById('progress-container').style.display = 'block';
-            xhr.send(formData);
-        }
-
-        function updateAdPercentage() {
-            const slider = document.getElementById('adSlider');
-            const percentage = document.getElementById('adPercentage');
-            percentage.textContent = slider.value + '%';
-        }
-    </script>
-</head>
-<body>
-    <div class="container">
-        <h1>Upload Video</h1>
-        <form action="/upload" method="post" enctype="multipart/form-data" onsubmit="uploadFile(event)">
-            <div class="form-group">
-                <label for="video">Video File (MP4 only, max 100 MB):</label>
-                <input type="file" name="video" id="video" accept=".mp4" required onchange="validateFileSize()">
-            </div>
-            <div id="progress-container">
-                <div id="progress-bar"></div>
-            </div>
-
-            <!-- Advertisement Control Slider -->
-            <div class="slider-container">
-                <label for="adSlider">Advertisement Control:</label>
-                <div id="adPercentage">50%</div>
-                <input type="range" min="0" name = "percent" max="100" value="50" class="slider" id="adSlider" oninput="updateAdPercentage()">
-            </div>
-
-            <div class="form-group">
-                <input type="submit" value="Upload">
-            </div>
-        </form>
-    </div>
-</body>
-</html>
+    function updateAdPercentage() {
+        const slider = document.getElementById('adSlider');
+        const percentage = document.getElementById('adPercentage');
+        percentage.textContent = slider.value + '%';
+    }
+</script>
+{% endblock %}

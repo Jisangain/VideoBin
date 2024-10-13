@@ -40,13 +40,8 @@ def view_video(filename):
 
     actual_link = video.mainurl
     random = randint(1, 100)
+    ad = video_info.ad_percent >= random
     if redirecttype == True:
-        if video_info.ad_percent >= random:
-            return render_template('player_ad.html', selected_video=actual_link)
-        else:
-            return render_template('player.html', selected_video=actual_link)
+        return render_template('player.html', selected_video=actual_link, ad = ad)
     else:
-        if video_info.ad_percent >= random:
-            return render_template('player2_ad.html', selected_video=actual_link)
-        else:
-            return render_template('player2.html', selected_video=actual_link)
+        return render_template('player2.html', selected_video=actual_link, ad = ad)
