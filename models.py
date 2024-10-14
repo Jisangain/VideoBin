@@ -24,21 +24,18 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(300), nullable=False)
     name = db.Column(db.String(100))
     btc_address = db.Column(db.String(100))
-    usd_balance = db.Column(db.Float)
+    usd_balance = db.Column(db.Float, default=0.00)
     creation_date = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     def __repr__(self):
         return f'<User {self.email}>'
 
 class countlog(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    time = db.Column(db.DateTime)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="SET DEFAULT"), nullable=False, default=1)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="SET DEFAULT"), primary_key=True, default=1)
     viewcount = db.Column(db.Integer, nullable=False)
-    usd_balance = db.Column(db.Float, nullable=False)
 
     def __repr__(self):
-        return f'<countlog {self.time}>'
+        return f'<countlog {self.viewcount}>'
 
 class distributionlog(db.Model):
     id = db.Column(db.Integer, primary_key=True)

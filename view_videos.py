@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template
 import os
 from . import db
-from .models import Base
+from .models import Base, countlog
 from random import randint
 
 current_directory = os.getcwd()
@@ -39,6 +39,15 @@ def view_video(filename):
         video_info = video
 
     actual_link = video.mainurl
+    log = db.session.get(countlog, video_info.user_id)
+    if log:
+        log.viewcount += 1
+    else:
+        log = countlog(user_id=video_info.user_id, viewcount=1)
+
+    db.session.add(log)
+    db.session.commit()
+
     random = randint(1, 100)
     ad = video_info.ad_percent >= random
     if redirecttype == True:

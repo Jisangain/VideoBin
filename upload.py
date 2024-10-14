@@ -2,6 +2,8 @@ import string
 from flask import current_app, Blueprint, render_template, request, redirect, url_for, render_template_string
 import random
 import os
+
+from flask_login import current_user
 from . import db, upload_status
 from .models import Base
 
@@ -62,12 +64,14 @@ def upload_video():
             random_filename = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(5)) + '.mp4'
             video_path = os.path.join(current_app.config['UPLOAD_FOLDER'], random_filename)
 
-            print(percent)
-            insert_data(random_filename[:-4], '/static/videos/'+random_filename, ad_percent=percent)
+            
             video.save(video_path)
             upload_status[random_filename] = 'uploaded'            
-
             video_url = url_for('view_videos.view_video', filename=random_filename)
+            user_id = 1
+            if current_user.is_authenticated:
+                user_id = current_user.id
+            insert_data(random_filename[:-4], '/static/videos/'+random_filename, ad_percent=percent, user_id=user_id)
             return video_url[:-4]
     return render_template('upload.html')
 

@@ -5,7 +5,6 @@ from . import credentials
 db = SQLAlchemy()
 upload_status = {}
 
-print('Creating app')
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = credentials.secret_key

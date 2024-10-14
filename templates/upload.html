@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
+{% if not current_user.is_authenticated %}
+<p style="color: green;">Earn money by uploading videos, <a href="{{ url_for('auth.signup') }}" style="color: rgb(255, 251, 0);">Sign Up</a> now</p>
+{% endif %}
 <div class="container has-text-centered">
     <h1 class="title">Upload Video</h1>
     <form action="/upload" method="post" enctype="multipart/form-data" onsubmit="uploadFile(event)">
