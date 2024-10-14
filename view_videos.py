@@ -17,13 +17,7 @@ def get_single_data(baseurl):
     return db.session.get(Base, baseurl)
 
 
-@view_videos.route('/m/<prefix>')
-def show_entries(prefix):
-    prefix_info = get_single_data(prefix)
-    if not prefix_info or prefix_info.link_type != 1:
-        return f'Invalid URL'
-    entries = Base.query.filter(Base.baseurl.like(f'{prefix}%')).all()
-    return render_template('show_entries.html', prefix = prefix_info, entries=entries)
+
 
 @view_videos.route('/v/<filename>')
 def view_video(filename):

@@ -5,7 +5,7 @@ import os
 
 from flask_login import current_user, login_required
 from . import db
-from .models import Base
+from .models import Base, User
 
 current_directory = os.getcwd()
 items = os.listdir(current_directory)
@@ -25,10 +25,21 @@ def policy():
     return render_template('policy.html')
 @view_pages.route('/archive')
 def archive():
-    urls = Base.query.with_entities(Base.name, Base.baseurl).filter_by(link_type=1).all()
+    
+    user = db.session.get(User, 1)
+    urls = user.bases
+
     return render_template('archive.html', urls=urls)
 
 @view_pages.route('/profile')
 @login_required
 def profile():
     return render_template('profile.html', name=current_user.name)
+
+@view_pages.route('/m/<prefix>')
+def show_entries(prefix):
+    prefix_info = db.session.get(Base, prefix)
+    if not prefix_info or prefix_info.link_type != 1:
+        return f'Invalid URL'
+    entries = Base.query.filter(Base.baseurl.like(f'{prefix}%')).all()
+    return render_template('show_entries.html', prefix = prefix_info, entries=entries)
