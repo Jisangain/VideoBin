@@ -25,8 +25,10 @@ def policy():
     return render_template('policy.html')
 @view_pages.route('/archive')
 def archive():
+    if current_user.is_authenticated == False:
+        return render_template('archive.html')
     
-    user = db.session.get(User, 1)
+    user = db.session.get(User, current_user.id)
     urls = user.bases
 
     return render_template('archive.html', urls=urls)
