@@ -39,14 +39,16 @@ class countlog(db.Model):
         return f'<countlog {self.viewcount}>'
 
 class Distributionlog(db.Model):
-    __tablename__ = 'distribution_log'  # Optional: Specify the table name explicitly
+    __tablename__ = 'distribution_log'
 
-    date = db.Column(db.Date, default=db.func.current_date, nullable=False)  # Store only the date
+    date = db.Column(db.Date, default=db.func.current_date, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="SET DEFAULT"), nullable=False, default=1)
     usd_balance = db.Column(db.Float, nullable=False)
 
+    user = db.relationship('User', backref='distribution_logs', cascade="all, delete")
+
     __table_args__ = (
-        PrimaryKeyConstraint('date', 'user_id'),  # Composite primary key
+        db.PrimaryKeyConstraint('date', 'user_id'),
     )
 
     def __repr__(self):
