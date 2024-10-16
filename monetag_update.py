@@ -1,9 +1,9 @@
 from time import sleep
-import credentials
+import settings
 import requests
 
-user = credentials.monetag_user
-password = credentials.monetag_pass
+user = settings.monetag_user
+password = settings.monetag_pass
 while True:
     try:
         with open('token.txt', 'r') as f:

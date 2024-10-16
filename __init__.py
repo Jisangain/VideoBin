@@ -1,14 +1,14 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from . import credentials
+from . import settings
 db = SQLAlchemy()
 upload_status = {}
 
 def create_app():
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = credentials.secret_key
-    app.config['SQLALCHEMY_DATABASE_URI'] = credentials.sql_uri
+    app.config['SECRET_KEY'] = settings.secret_key
+    app.config['SQLALCHEMY_DATABASE_URI'] = settings.sql_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_recycle' : 280}
     app.config['UPLOAD_FOLDER'] = 'static/videos'

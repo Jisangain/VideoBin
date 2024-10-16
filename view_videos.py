@@ -1,9 +1,11 @@
 from flask import Blueprint, render_template
+from sqlalchemy.sql import text
 import os
 from . import db
 from .models import Base, countlog
 from random import randint
-
+from .settings import self_ad
+from .viewers import distribute
 current_directory = os.getcwd()
 items = os.listdir(current_directory)
 if 'VideoBin' in items:
@@ -16,7 +18,10 @@ view_videos = Blueprint('view_videos', __name__)
 def get_single_data(baseurl):
     return db.session.get(Base, baseurl)
 
-
+@view_videos.route('/xx')
+def xx():
+    distribute()
+    return "xx"
 
 
 @view_videos.route('/v/<filename>')
@@ -33,17 +38,23 @@ def view_video(filename):
         video_info = video
 
     actual_link = video.mainurl
-    log = db.session.get(countlog, video_info.user_id)
-    if log:
-        log.viewcount += 1
-    else:
-        log = countlog(user_id=video_info.user_id, viewcount=1)
 
-    db.session.add(log)
-    db.session.commit()
 
     random = randint(1, 100)
     ad = video_info.ad_percent >= random
+    if ad:
+        user_id = video_info.user_id
+        if randint(0,99)<self_ad:
+            user_id = 1
+        db.session.execute(
+            text("""
+                INSERT INTO countlog (user_id, viewcount) 
+                VALUES (:user_id, 1)
+                ON DUPLICATE KEY UPDATE viewcount = viewcount + 1
+            """),
+            {"user_id": user_id}
+        )
+    db.session.commit()
     if redirecttype == True:
         return render_template('player.html', selected_video=actual_link, ad = ad)
     else:
