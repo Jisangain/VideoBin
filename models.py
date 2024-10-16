@@ -1,3 +1,4 @@
+from sqlalchemy import PrimaryKeyConstraint
 from . import db
 from flask_login import UserMixin
 from sqlalchemy.orm import relationship
@@ -37,14 +38,19 @@ class countlog(db.Model):
     def __repr__(self):
         return f'<countlog {self.viewcount}>'
 
-class distributionlog(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    time = db.Column(db.DateTime)
+class Distributionlog(db.Model):
+    __tablename__ = 'distribution_log'  # Optional: Specify the table name explicitly
+
+    date = db.Column(db.Date, default=db.func.current_date, nullable=False)  # Store only the date
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="SET DEFAULT"), nullable=False, default=1)
     usd_balance = db.Column(db.Float, nullable=False)
 
+    __table_args__ = (
+        PrimaryKeyConstraint('date', 'user_id'),  # Composite primary key
+    )
+
     def __repr__(self):
-        return f'<distributionlog {self.usd_balance}>'
+        return f'<Distributionlog {self.usd_balance}>'
 
 class IPAccess(db.Model):
     ip = db.Column(db.String(45), primary_key=True)  # IPv6-compatible

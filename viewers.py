@@ -1,16 +1,16 @@
 # One ip will be counted as one view per 30 minutes
 import datetime
-from .models import IPAccess, User, countlog, distributionlog
+from .models import IPAccess, User, countlog, Distributionlog
 from . import db
 def is_a_new_viewer(ip_address):
-    if not db.session.get(IPAccess, ip_address):
+    get_ip = db.session.get(IPAccess, ip_address)
+    if not get_ip:
         db.session.add(IPAccess(ip=ip_address))
         db.session.commit()
         return True
     else:
-        ip = db.session.get(IPAccess, ip_address)
-        if ip.time < datetime.datetime.now() - datetime.timedelta(minutes=12):
-            ip.time = datetime.datetime.now()
+        if get_ip.time < datetime.datetime.now() - datetime.timedelta(minutes=12):
+            get_ip.time = datetime.datetime.now()
             db.session.commit()
             return True
         else:
@@ -29,14 +29,21 @@ def distribute():
             user_id = user.user_id
             viewcount = user.viewcount
             user = db.session.get(User, user_id)
-            user.usd_balance += viewcount * (old_earnings - current_earnings) / sum_viewcounts
-            db.session.commit()
-        # Clear countlog
+            user.usd_balance += viewcount * (current_earnings - old_earnings) / sum_viewcounts
+            date_now = datetime.date.today()
+            record = db.session.get(Distributionlog, (date_now, user_id))
+            if record:
+                record.usd_balance += viewcount * (current_earnings - old_earnings) / sum_viewcounts
+            else:
+                db.session.add(Distributionlog(
+                        date=date_now,
+                        user_id=user_id,
+                        usd_balance=viewcount * (current_earnings - old_earnings) / sum_viewcounts
+                    )
+                )
         db.session.query(countlog).delete()
-        db.session.commit()
-        # Log distribution
-        db.session.add(distributionlog(usd_balance=current_earnings))
         db.session.commit()
         return True
     else:
         return False
+
