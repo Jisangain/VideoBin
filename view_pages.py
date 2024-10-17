@@ -5,8 +5,9 @@ import os
 
 from flask_login import current_user, login_required
 from . import db
-from .models import Base, User
-
+from .models import Base, User, Last_access
+from .settings import monetag_key
+from .viewers import distribute
 current_directory = os.getcwd()
 items = os.listdir(current_directory)
 if 'VideoBin' in items:
@@ -47,3 +48,31 @@ def show_entries(prefix):
         return f'Invalid URL'
     entries = Base.query.filter(Base.baseurl.like(f'{prefix}%')).all()
     return render_template('show_entries.html', prefix = prefix_info, entries=entries)
+
+
+@view_pages.route('/adupdate', methods=['POST'])
+def adupdate():
+    req = request.json
+    key = req['key']
+    total_usd = float(req['total_usd'])
+    time_now = db.func.current_timestamp()
+    if key == monetag_key:
+        old_data = db.session.get(Last_access, 1)
+        if not old_data:
+            success = distribute(0, total_usd)
+            if not success:
+                return "False"
+            new_data = Last_access(access_type=1, access_time=time_now, value=str(total_usd))
+            db.session.add(new_data)
+            db.session.commit()
+            return "True"
+        elif abs(total_usd - float(old_data.value)) > 0.01:
+            success = distribute(float(old_data.value), total_usd)
+            if not success:
+                return "False"
+            old_data.access_time = time_now
+            old_data.value = str(total_usd)
+            db.session.commit()
+            return "True"
+        else:
+            return "False"

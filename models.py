@@ -60,3 +60,11 @@ class IPAccess(db.Model):
 
     def __repr__(self):
         return f'<IPAccess {self.ip}>'
+
+class Last_access(db.Model):
+    access_type = db.Column(db.Integer, primary_key=True)
+    access_time = db.Column(db.DateTime, nullable=False)
+    value = db.Column(db.String(40))
+
+    def __repr__(self):
+        return f'<Last_access {self.access_time}>'

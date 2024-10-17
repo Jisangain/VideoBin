@@ -4,9 +4,10 @@ import requests
 
 user = settings.monetag_user
 password = settings.monetag_pass
+url = "http://127.0.0.1:5000"
 while True:
     try:
-        with open('token.txt', 'r') as f:
+        with open('monetag_token.txt', 'r') as f:
             token = f.read().strip()
     except FileNotFoundError:
         token = None
@@ -37,6 +38,18 @@ while True:
 
             total_balance = balance_response.json().get('balance') + balance_response.json().get('hold_earning')
             print("Total balance:", total_balance)
+            # Send post request to the server to update the balance, api_url = url+'/adupdate'
+            adupdate_payload = {
+                "key": settings.monetag_key,
+                "total_usd": total_balance
+            }
+            adupdate_response = requests.post(url+'/adupdate', json=adupdate_payload)
+            if adupdate_response.status_code == 200:
+                print("Balance updated successfully")
+                print("Response:", adupdate_response.text)
+            else:
+                print("Balance update failed. Status Code:", adupdate_response.status_code)
+                print("Response:", adupdate_response.json())
         else:
             is_token_valid = False
     else:
@@ -59,8 +72,8 @@ while True:
         login_response = requests.post(login_url, json=login_payload, headers=headers)
         if login_response.status_code == 200:
             token = login_response.json().get('api_token')
-            # Update the token in token.json
-            with open('token.txt', 'w') as f:
+            # Update the token in monetag_token.json
+            with open('monetag_token.txt', 'w') as f:
                 f.write(token)
             
         else:

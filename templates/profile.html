@@ -36,12 +36,16 @@
 
 <body>
     {% if current_user.is_authenticated %}
-    <h2>Your wallet: {{wallet}}, here you will get paid first week of the next month</h2>
-        <ul>
+    <h2>Your BTC wallet: {{wallet}}, here you will get paid after a month of holding. Your daily earning will update in each hour.</h2>
+        {% if logs %}
+            <ul>
             {% for log in logs %}
-                <li>{{log.date}}: {{ log.usd_balance }} $</li>
+                <li>{{ log.date }}: {{ log.usd_balance }} $</li>
             {% endfor %}
-        </ul>
+            </ul>
+        {% else %}
+            <p>No past earning data is available</p>
+        {% endif %}
     </body>
         <script>
             document.querySelector('.hero-body').style.alignItems = 'flex-start';

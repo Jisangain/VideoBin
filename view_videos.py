@@ -1,11 +1,12 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request
 from sqlalchemy.sql import text
 import os
-from . import db
+from . import db, upload_status
 from .models import Base, countlog
 from random import randint
 from .settings import self_ad
-from .viewers import distribute
+from .viewers import distribute, is_a_new_viewer
+
 current_directory = os.getcwd()
 items = os.listdir(current_directory)
 if 'VideoBin' in items:
@@ -18,10 +19,7 @@ view_videos = Blueprint('view_videos', __name__)
 def get_single_data(baseurl):
     return db.session.get(Base, baseurl)
 
-@view_videos.route('/xx')
-def xx():
-    distribute()
-    return "xx"
+
 
 
 @view_videos.route('/v/<filename>')
@@ -46,15 +44,18 @@ def view_video(filename):
         user_id = video_info.user_id
         if randint(0,99)<self_ad:
             user_id = 1
-        db.session.execute(
-            text("""
-                INSERT INTO countlog (user_id, viewcount) 
-                VALUES (:user_id, 1)
-                ON DUPLICATE KEY UPDATE viewcount = viewcount + 1
-            """),
-            {"user_id": user_id}
-        )
-    db.session.commit()
+        # Check if the viewers ip is_a_new_viewer is true
+        ip = request.remote_addr
+        if is_a_new_viewer(ip):
+            db.session.execute(
+                text("""
+                    INSERT INTO countlog (user_id, viewcount) 
+                    VALUES (:user_id, 1)
+                    ON DUPLICATE KEY UPDATE viewcount = viewcount + 1
+                """),
+                {"user_id": user_id}
+            )
+            db.session.commit()
     if redirecttype == True:
         return render_template('player.html', selected_video=actual_link, ad = ad)
     else:

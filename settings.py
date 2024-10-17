@@ -6,6 +6,7 @@ import os
 load_dotenv()  # Load variables from .env
 monetag_user = os.getenv("monetag_gmail")
 monetag_pass = os.getenv("monetag_pass")
+monetag_key = os.getenv("monetag_key") # Make sure this is same in both flask and monetag_update.py files
 secret_key = os.getenv("flask_key")
 sql_uri = os.getenv("sql_uri") # eg.: 'mysql+mysqldb://root:pass@localhost/flaskapp'
 self_ad = 5 # Percentage of ad views for me

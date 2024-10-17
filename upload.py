@@ -44,7 +44,7 @@ def UploadStatus():
             return 'sending'
         if request_type == 'done' and name in upload_status:
             new_url = req['url']
-            base_entry = Base.query.get(name[:-4])
+            base_entry = db.session.get(Base, name[:-4])
             if base_entry:
                 base_entry.mainurl = new_url
                 db.session.commit()
@@ -128,7 +128,7 @@ def addurl():
         if "http" in user_input and user_input.endswith('.mp4'):
             random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
             insert_data(random_string, user_input)
-            return redirect('/v/' + random_string + ".mp4")
+            return redirect('/v/' + random_string)
         else:
             return "Invalid URL. Please provide a valid URL ending with '.mp4'."
     return render_template_string('''

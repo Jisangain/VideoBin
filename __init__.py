@@ -18,7 +18,7 @@ def create_app():
     db.init_app(app)
     with app.app_context():
         db.create_all()
-        local_urls = Base.query.filter(Base.mainurl.like(f'{"/static/videos/"}%')).all()
+        local_urls = Base.query.filter(Base.mainurl.like(f'{"/static/videos/"}%')).all() 
         for url in local_urls:
             upload_status[url.baseurl + '.mp4'] = 'uploaded'
 
