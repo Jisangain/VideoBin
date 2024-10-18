@@ -4,7 +4,16 @@
 <p style="color: green;">Earn money by uploading videos, <a href="{{ url_for('auth.signup') }}" style="color: rgb(255, 251, 0);">Sign Up</a> now</p>
 {% endif %}
 <div class="container has-text-centered">
-    <h1 class="title">Upload Video</h1>
+    <h1 class="title">Upload Video or Use Direct Link</h1>
+
+    <!-- Buttons to switch between forms -->
+    <div class="buttons">
+        <button class="button is-primary" onclick="showUploadForm()">Upload Video</button>
+        <button class="button is-info" onclick="showLinkForm()">Direct Link</button>
+    </div>
+
+    <!-- Upload Form -->
+    <div id="uploadForm" class="container has-text-centered" style="display: block;">
     <form action="/upload" method="post" enctype="multipart/form-data" onsubmit="uploadFile(event)">
         <div class="form-group">
             <label for="video">Video File (MP4 only, max 100 MB):</label>
@@ -27,8 +36,35 @@
     </form>
 </div>
 
+                <!-- Direct Link Form -->
+                <div id="linkForm" class="container has-text-centered" style="display: none;">
+                    <form action="/submit_link" method="post" onsubmit="submitLink(event)">
+                        <div class="form-group">
+                            <label for="videoLink">Direct Video Link:</label>
+                            <input type="text" name="videoLink" id="videoLink" placeholder="https://example.com/video.mp4" required>
+                        </div>
+
+                        <!-- Advertisement Control Slider -->
+                        <div class="slider-container">
+                            <label for="adSlider">Advertisement Control:</label>
+                            <div id="adPercentageLink">50%</div>
+                            <input type="range" min="0" name="percent" max="100" value="50" class="slider" id="adSliderLink" oninput="updateAdPercentageLink()">
+                        </div>
+
+                        <div class="form-group">
+                            <input type="submit" class="button is-info" value="Submit Link">
+                        </div>
+                    </form>
+                </div>
+
 <style>
     /* Custom styles for the upload page */
+    .buttons {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
     .container {
         background-color: #000000;
         border: 1px solid #ddd;
@@ -76,7 +112,8 @@
     .slider {
         width: 100%;
     }
-    #adPercentage {
+    #adPercentage,
+    #adPercentageLink {
         font-size: 1.5em;
         margin-bottom: 10px;
     }
@@ -124,10 +161,45 @@
         xhr.send(formData);
     }
 
+    function submitLink(event) {
+                        event.preventDefault();
+                        var form = event.target;
+                        var formData = new FormData(form);
+                        var xhr = new XMLHttpRequest();
+
+                        xhr.addEventListener('load', function() {
+                            if (xhr.status === 200) {
+                                var responseUrl = xhr.responseText;
+                                window.location.href = responseUrl;
+                            } else {
+                                alert('Link submission failed. Please try again.');
+                            }
+                        });
+
+                        xhr.open('POST', '/submit_link');
+                        xhr.send(formData);
+                    }
+
     function updateAdPercentage() {
         const slider = document.getElementById('adSlider');
         const percentage = document.getElementById('adPercentage');
         percentage.textContent = slider.value + '%';
     }
+
+    function updateAdPercentageLink() {
+                        const slider = document.getElementById('adSliderLink');
+                        const percentage = document.getElementById('adPercentageLink');
+                        percentage.textContent = slider.value + '%';
+                    }
+
+                    function showUploadForm() {
+                        document.getElementById('uploadForm').style.display = 'block';
+                        document.getElementById('linkForm').style.display = 'none';
+                    }
+
+                    function showLinkForm() {
+                        document.getElementById('uploadForm').style.display = 'none';
+                        document.getElementById('linkForm').style.display = 'block';
+                    }
 </script>
 {% endblock %}

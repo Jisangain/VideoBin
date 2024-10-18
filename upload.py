@@ -121,22 +121,19 @@ def add_entry(prefix):
 
 
 
-@upload.route('/add', methods=['GET', 'POST'])
+@upload.route('/submit_link', methods=['POST'])
 def addurl():
-    if request.method == 'POST':
-        user_input = request.form['user_input']
-        if "http" in user_input and user_input.endswith('.mp4'):
-            random_string = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
-            insert_data(random_string, user_input)
-            return redirect('/v/' + random_string)
-        else:
-            return "Invalid URL. Please provide a valid URL ending with '.mp4'."
-    return render_template_string('''
-        <!doctype html>
-        <title>Input Form</title>
-        <h1>Enter your text</h1>
-        <form method=post>
-          <input type=text name=user_input>
-          <input type=submit value=Submit>
-        </form>
-    ''')
+    video_link = request.form.get('videoLink', '')
+    percent = request.form.get('percent', 50)
+
+    if "http" in video_link and video_link.endswith('.mp4'):
+        random_filename = ''.join(random.choices(string.ascii_letters + string.digits, k=5))
+        video_url = url_for('view_videos.view_video', filename=random_filename)
+        user_id = 1
+        if current_user.is_authenticated:
+            user_id = current_user.id
+        insert_data(random_filename, video_link, ad_percent=percent, user_id=user_id)
+        return video_url
+    return render_template('upload.html')
+
+

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block headscript %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#settings').submit(function (e) {
+                e.preventDefault();
+                var password = $('#password').val();
+                var confirm_password = $('#confirm_password').val();
+                if (password != confirm_password) {
+                    $('#error-message').html('Passwords do not match').show();
+                } else {
+                    this.submit();
+                }
+            });
+        });
+    </script>
+{% endblock %}
+{% block content %}
+<div class="column is-4 is-offset-4">
+    <h3 class="title">Change Your Info</h3>
+    <div class="box" style="background-color: #000000;">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="notification is-danger">
+                {{ messages[0] }}.
+            </div>
+        {% endif %}
+        {% endwith %}
+        <p style="color: green;">Leave empty if you do not want to change any option</p>
+        <form id="settings" method="POST" action="/settings">
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="email" name="email" placeholder={{current_user.email}} autofocus="" disabled>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="text" name="name" placeholder="Name" autofocus="">
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="text" name="btc_wallet" placeholder="BTC Wallet Address">
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="password" id="password" name="password" placeholder="New Password">
+                </div>
+            </div>
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="password" id="confirm_password" name="confirm_password" placeholder="Confirm Password">
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="password" id="old_password" name="old_password" placeholder="Password" required>
+                </div>
+            </div>
+            <div id="error-message" style="color: red; display: none;"></div> <!-- Error message container -->
+            <button class="button is-block is-info is-large is-fullwidth">Change</button>
+        </form>
+    </div>
+    </div>
+</div>
+{% endblock %}

@@ -10,3 +10,4 @@ monetag_key = os.getenv("monetag_key") # Make sure this is same in both flask an
 secret_key = os.getenv("flask_key")
 sql_uri = os.getenv("sql_uri") # eg.: 'mysql+mysqldb://root:pass@localhost/flaskapp'
 self_ad = 5 # Percentage of ad views for me
+encryption_method = 'scrypt' # Encryption method for passwords, change to 'sha256' if scrypt is not available
