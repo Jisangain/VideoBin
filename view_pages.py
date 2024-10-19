@@ -75,4 +75,6 @@ def adupdate():
             db.session.commit()
             return "True"
         else:
-            return "False"
+            return "No Change"
+    else:
+        return "False"
