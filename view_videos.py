@@ -20,8 +20,6 @@ def get_single_data(baseurl):
     return db.session.get(Base, baseurl)
 
 
-
-
 @view_videos.route('/v/<filename>')
 def view_video(filename):
     redirecttype = False
@@ -45,7 +43,10 @@ def view_video(filename):
         if randint(0,99)<self_ad:
             user_id = 1
         # Check if the viewers ip is_a_new_viewer is true
-        ip = request.remote_addr
+        ip = request.headers.get('X-Real-IP')
+        if ip is None:
+            ip = request.remote_addr
+
         if is_a_new_viewer(ip):
             db.session.execute(
                 text("""
@@ -59,4 +60,4 @@ def view_video(filename):
     if redirecttype == True:
         return render_template('player.html', selected_video=actual_link, ad = ad)
     else:
-        return render_template('player2.html', selected_video=actual_link, ad = ad)
+        return render_template('player2.html', selected_video=actual_link, ad = ad, video_info = video_info)

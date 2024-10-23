@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block headscript %}
+    <title>Sound Volume Control and Delete</title>
+    <style>
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+    label {
+        display: block;
+        margin-bottom: 5px;
+    }
+    input[type="file"],
+    input[type="text"],
+    textarea,
+    select {
+        width: 70%;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        box-sizing: border-box;
+    }
+
+
+    .slider {
+        width: 70%;
+    }
+    #adPercentage,
+    #adPercentageLink {
+        font-size: 1.5em;
+        margin-bottom: 10px;
+    }
+    </style>
+{% endblock %}
+{% block content %}
+<form action="{{ url_for('view_pages.edit_post', prefix=prefix.baseurl) }}" method="POST" enctype="multipart/form-data">
+    <div class="container has-text-centered">
+        <h2>Update Name and Control Ad</h2>
+        <div>
+            <label for="newName">New Name:</label>
+            <input type="text" id="newName" name="newName" autocomplete="off" placeholder="{{prefix.name}}">
+        </div>
+
+        <div class="slider-container">
+            <label for="adSlider">Advertisement Control:</label>
+            <div id="adPercentageLink">{{prefix.ad_percent}}%</div>
+            <input type="range" min="0" name="percent" max="100" value="{{prefix.ad_percent}}" class="slider" id="adSliderLink" oninput="updateAdPercentageLink()">
+        </div>
+        <!-- Change Button -->
+        <div>
+            <button class="button is-info is-large" id="changeButton"  name="action" type="submit" value="change">Change</button>
+        </div>
+
+        <div class="delete-section">
+            <label class="confirm-label" for="confirmDelete">OR</label>
+            <label class="confirm-label" for="confirmDelete">Type "Confirm" and Delete:</label>
+            <input type="text" id="confirmDelete" name="confirmDelete" autocomplete="off" placeholder="Type 'Confirm' to enable delete">
+            <button class="button is-info is-large" id="deleteButton" name="action" type="submit" value="delete" disabled>Delete</button>
+        </div>
+    </div>
+</form>
+
+    <script>
+        
+        const confirmDeleteInput = document.getElementById('confirmDelete');
+        const deleteButton = document.getElementById('deleteButton');
+
+        confirmDeleteInput.addEventListener('input', function() {
+            if (confirmDeleteInput.value === "Confirm") {
+                deleteButton.disabled = false;
+            } else {
+                deleteButton.disabled = true;
+            }
+        });
+        function updateAdPercentageLink() {
+            const slider = document.getElementById('adSliderLink');
+            const percentage = document.getElementById('adPercentageLink');
+            percentage.textContent = slider.value + '%';
+        }
+
+        function showUploadForm() {
+            document.getElementById('uploadForm').style.display = 'block';
+            document.getElementById('linkForm').style.display = 'none';
+        }
+
+        function showLinkForm() {
+            document.getElementById('uploadForm').style.display = 'none';
+            document.getElementById('linkForm').style.display = 'block';
+        }
+    </script>
+{% endblock %}

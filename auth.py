@@ -10,10 +10,14 @@ auth = Blueprint('auth', __name__)
 
 @auth.route('/login')
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('view_pages.profile'))
     return render_template('login.html')
 
 @auth.route('/login', methods=['POST'])
 def login_post():
+    if current_user.is_authenticated:
+        return redirect(url_for('view_pages.profile'))
     # login code goes here
     email = request.form.get('email')
     password = request.form.get('password')
@@ -34,10 +38,15 @@ def login_post():
 
 @auth.route('/signup')
 def signup():
+    if current_user.is_authenticated:
+        return redirect(url_for('view_pages.profile'))
     return render_template('signup.html')
 
 @auth.route('/signup', methods=['POST'])
 def signup_post():
+    if current_user.is_authenticated:
+        return redirect(url_for('view_pages.profile'))
+
     email = request.form.get('email')
     name = request.form.get('name')
     password = request.form.get('password')

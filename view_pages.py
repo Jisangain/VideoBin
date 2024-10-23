@@ -1,5 +1,5 @@
 import string
-from flask import current_app, Blueprint, render_template, request, redirect, url_for, render_template_string
+from flask import current_app, Blueprint, flash, render_template, request, redirect, url_for, render_template_string
 import random
 import os
 
@@ -49,6 +49,41 @@ def show_entries(prefix):
     entries = Base.query.filter(Base.baseurl.like(f'{prefix}%')).all()
     return render_template('show_entries.html', prefix = prefix_info, entries=entries)
 
+@view_pages.route('/edit_video/<prefix>')
+@login_required
+def edit(prefix):
+    prefix_info = db.session.query(Base).filter_by(baseurl=prefix, user_id=current_user.id).first()
+    if not prefix_info:
+        return f'Invalid URL'
+    return render_template('edit.html', prefix = prefix_info)
+
+
+@view_pages.route('/edit_video/<prefix>', methods=['POST'])
+@login_required
+def edit_post(prefix):
+    action = request.form.get('action')
+    prefix_info = db.session.query(Base).filter_by(baseurl=prefix, user_id=current_user.id).first()
+    if action == 'delete':
+        if prefix_info:
+            try:
+                db.session.query(Base).filter_by(baseurl=prefix).delete()
+                db.session.commit()
+                #flash('Video deleted successfully!', 'success')
+                return redirect(url_for('view_pages.archive'))
+            except Exception as e:
+                db.session.rollback()
+                #flash(f'An error occurred while deleting the video: {str(e)}', 'danger')
+                return redirect(url_for('view_pages.edit', prefix=prefix))
+        else:
+            #flash('Video not found or you don’t have permission to delete it.', 'danger')
+            return redirect(url_for('view_pages.edit', prefix=prefix))
+    elif action == 'change':
+        if not prefix_info:
+            return f'Invalid URL'
+        prefix_info.name = request.form.get('newName', prefix_info.name)
+        prefix_info.ad_percent = request.form.get('percent', prefix_info.ad_percent)
+        db.session.commit()
+        return redirect(url_for('view_videos.view_video', filename=prefix))
 
 @view_pages.route('/adupdate', methods=['POST'])
 def adupdate():

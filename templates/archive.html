@@ -31,6 +31,10 @@
             .has-text-centered {
                 text-align: left !important;
             }
+            .tab { 
+                display:inline-block; 
+                margin-left: 80px; 
+            }
         </style>
     {% endif %}
 {% endblock %}
@@ -41,7 +45,13 @@
     <h2>Archives: </h2>
         <ul>
             {% for i in range(urls|length) %}
-                <li>{{i+1}}: <a href="{{ '/v/' + urls[i].baseurl }}">{{ urls[i].baseurl }}</a></li>
+                <li> <p>{{i+1}}: <a href="{{ '/v/' + urls[i].baseurl }}">
+                    {% if urls[i].name != '' %}
+                        {{ urls[i].name }}
+                    {% else %}
+                        {{ urls[i].baseurl }}
+                    {% endif %}
+                </a> <span class="tab"><a href="{{ '/edit_video/' + urls[i].baseurl }}">Edit or Delete</a></span></p></li>
             {% endfor %}
         </ul>
     </body>
