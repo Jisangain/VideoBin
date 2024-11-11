@@ -44,8 +44,7 @@ async def monetag():
             if balance_response.status_code == 200:
                 print("Balance information:", balance_response.json())
                 # Logged in successfully
-
-                total_balance = balance_response.json().get('balance') + balance_response.json().get('hold_earning')
+                total_balance = balance_response.json().get('payout_balance') + balance_response.json().get('hold_earning') + balance_response.json().get('total_withdraws')
                 print("Total balance:", total_balance)
                 # Send post request to the server to update the balance, api_url = url+'/adupdate'
                 adupdate_payload = {
