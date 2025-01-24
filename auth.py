@@ -50,14 +50,15 @@ def signup_post():
     email = request.form.get('email')
     name = request.form.get('name')
     password = request.form.get('password')
-    wallet = request.form.get('btc_wallet')
+    network = request.form.get('network','').split(',')[0]
+    wallet = network +' ' +request.form.get('usdt_wallet','')
 
     user = User.query.filter_by(email=email).first()
 
     if user:
         flash('Email address already exists')
         return redirect(url_for('auth.signup'))
-    new_user = User(email=email, name=name, password=generate_password_hash(password, method=encryption_method), btc_address=wallet)
+    new_user = User(email=email, name=name, password=generate_password_hash(password, method=encryption_method), wallet=wallet)
     db.session.add(new_user)
     db.session.commit()
 
@@ -78,14 +79,15 @@ def settings():
 @login_required
 def settings_post():
     new_name = request.form.get('name','')
-    new_wallet = request.form.get('btc_wallet','')
+    network = request.form.get('network','').split(',')[0]
+    new_wallet = network +' ' +request.form.get('usdt_wallet','')
     new_password = request.form.get('password','')
     old_password = request.form.get('old_password','')
     if check_password_hash(current_user.password, old_password):
         if len(new_name) > 0:
             current_user.name = new_name
         if len(new_wallet) > 0:
-            current_user.btc_address = new_wallet
+            current_user.wallet = new_wallet
         if len(new_password) > 0:
             current_user.password = generate_password_hash(new_password, method=encryption_method)
         db.session.commit()

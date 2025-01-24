@@ -39,7 +39,7 @@ def archive():
 def profile():
     user = db.session.query(User).filter_by(id=current_user.id).first()
     logs = user.distribution_logs
-    return render_template('profile.html', name=current_user.name, wallet = current_user.btc_address, logs=logs)
+    return render_template('profile.html', name=current_user.name, wallet = current_user.wallet, logs=logs)
 
 @view_pages.route('/m/<prefix>')
 def show_entries(prefix):

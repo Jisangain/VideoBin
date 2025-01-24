@@ -2,21 +2,22 @@
 
 {% block headscript %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            $('#signupForm').submit(function (e) {
-                e.preventDefault();
-                var password = $('#password').val();
-                var confirm_password = $('#confirm_password').val();
-                if (password != confirm_password) {
-                    $('#error-message').html('Passwords do not match').show();
-                } else {
-                    this.submit();
-                }
-            });
+<script>
+    $(document).ready(function () {
+        $('#signupForm').submit(function (e) {
+            e.preventDefault();
+            var password = $('#password').val();
+            var confirm_password = $('#confirm_password').val();
+            if (password != confirm_password) {
+                $('#error-message').html('Passwords do not match').show();
+            } else {
+                this.submit();
+            }
         });
-    </script>
+    });
+</script>
 {% endblock %}
+
 {% block content %}
 <div class="column is-4 is-offset-4">
     <h3 class="title">Sign Up</h3>
@@ -31,13 +32,13 @@
         <form id="signupForm" method="POST" action="/signup">
             <div class="field">
                 <div class="control">
-                    <input class="input is-large" type="email" name="email" placeholder="Email" autofocus="">
+                    <input class="input is-large" type="email" name="email" placeholder="Email" autofocus="" autocomplete="off" required>
                 </div>
             </div>
 
             <div class="field">
                 <div class="control">
-                    <input class="input is-large" type="text" name="name" placeholder="Name" autofocus="">
+                    <input class="input is-large" type="text" name="name" placeholder="Name" autofocus="" autocomplete="off" required>
                 </div>
             </div>
 
@@ -51,9 +52,37 @@
                     <input class="input is-large" type="password" id="confirm_password" name="confirm_password" placeholder="Confirm Password" required>
                 </div>
             </div>
+            <p style="color: red;">Ensure the network matches the withdrawal address and the deposit platform support it, or assets may be lost</p>
+            <!-- Dropdown for Network Selection -->
             <div class="field">
                 <div class="control">
-                    <input class="input is-large" type="text" name="btc_wallet" placeholder="BTC Wallet Address">
+                    <div class="select is-large is-fullwidth">
+                        <select name="network" required>
+                            <option value="" disabled selected>Select USDT Network</option>
+                            <option value="BSC">BSC (BEP20) Min:10 USDT, Fee:0 USDT</option>
+                            <option value="OPBNB">OPBNB Min:20 USDT, Fee:0 USDT</option>
+                            <option value="CELO">CELO Min:10 USDT, Fee:0.03 USDT</option>
+                            <option value="OPTIMISM">OPTIMISM Min:0.2 USDT, Fee:0.099 USDT</option>
+                            <option value="AVAXC">AVAXC Min:0.2 USDT, Fee:0.1 USDT</option>
+                            <option value="SCROLL">SCROLL Min:10 USDT, Fee:0.1 USDT</option>
+                            <option value="APT">APT Min:10 USDT, Fee:0.1 USDT</option>
+                            <option value="XTZ">XTZ (Tezos) Min:10 USDT, Fee:0.1 USDT</option>
+                            <option value="NEAR">NEAR Min:10 USDT, Fee:0.2 USDT</option>
+                            <option value="KAVAEVM">KAVAEVM Min:10 USDT, Fee:0.2 USDT</option>
+                            <option value="TON">TON Min:5 USDT, Fee:0.3 USDT</option>
+                            <option value="ARBITRUM">ARBITRUM Min:0.92 USDT, Fee:0.46 USDT</option>
+                            <option value="EOS">EOS Min:10 USDT, Fee:1 USDT</option>
+                            <option value="TRX">TRX (TRC20) Min:10 USDT, Fee:1 USDT</option>
+                            <option value="ETH">ETH (ERC20) Min:18 USDT, Fee:5.5 USDT</option>
+                            <option value="SOL">SOL Min:50 USDT, Fee:3 USDT</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="text" name="usdt_wallet" placeholder="USDT Wallet Address" autocomplete="off" required>
                 </div>
             </div>
 

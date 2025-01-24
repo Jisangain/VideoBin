@@ -44,18 +44,46 @@
 
             <div class="field">
                 <div class="control">
-                    <input class="input is-large" type="text" name="btc_wallet" placeholder="BTC Wallet Address">
-                </div>
-            </div>
-
-            <div class="field">
-                <div class="control">
                     <input class="input is-large" type="password" id="password" name="password" placeholder="New Password">
                 </div>
             </div>
             <div class="field">
                 <div class="control">
                     <input class="input is-large" type="password" id="confirm_password" name="confirm_password" placeholder="Confirm Password">
+                </div>
+            </div>
+
+            <p style="color: red;">Ensure the network matches the withdrawal address and the deposit platform support it, or assets may be lost</p>
+            <!-- Dropdown for Network Selection -->
+            <div class="field">
+                <div class="control">
+                    <div class="select is-large is-fullwidth">
+                        <select name="network">
+                            <option value="" disabled selected>Select USDT Network</option>
+                            <option value="BSC" {% if current_user.wallet.startswith("BSC") %}selected{% endif %}>BSC (BEP20) Min:10 USDT, Fee:0 USDT</option>
+                            <option value="OPBNB" {% if current_user.wallet.startswith("OPBNB") %}selected{% endif %}>OPBNB Min:20 USDT, Fee:0 USDT</option>
+                            <option value="CELO" {% if current_user.wallet.startswith("CELO") %}selected{% endif %}>CELO Min:10 USDT, Fee:0.03 USDT</option>
+                            <option value="OPTIMISM" {% if current_user.wallet.startswith("OPTIMISM") %}selected{% endif %}>OPTIMISM Min:0.2 USDT, Fee:0.099 USDT</option>
+                            <option value="AVAXC" {% if current_user.wallet.startswith("AVAXC") %}selected{% endif %}>AVAXC Min:0.2 USDT, Fee:0.1 USDT</option>
+                            <option value="SCROLL" {% if current_user.wallet.startswith("SCROLL") %}selected{% endif %}>SCROLL Min:10 USDT, Fee:0.1 USDT</option>
+                            <option value="APT" {% if current_user.wallet.startswith("APT") %}selected{% endif %}>APT Min:10 USDT, Fee:0.1 USDT</option>
+                            <option value="XTZ" {% if current_user.wallet.startswith("XTZ") %}selected{% endif %}>XTZ (Tezos) Min:10 USDT, Fee:0.1 USDT</option>
+                            <option value="NEAR" {% if current_user.wallet.startswith("NEAR") %}selected{% endif %}>NEAR Min:10 USDT, Fee:0.2 USDT</option>
+                            <option value="KAVAEVM" {% if current_user.wallet.startswith("KAVAEVM") %}selected{% endif %}>KAVAEVM Min:10 USDT, Fee:0.2 USDT</option>
+                            <option value="TON" {% if current_user.wallet.startswith("TON") %}selected{% endif %}>TON Min:5 USDT, Fee:0.3 USDT</option>
+                            <option value="ARBITRUM" {% if current_user.wallet.startswith("ARBITRUM") %}selected{% endif %}>ARBITRUM Min:0.92 USDT, Fee:0.46 USDT</option>
+                            <option value="EOS" {% if current_user.wallet.startswith("EOS") %}selected{% endif %}>EOS Min:10 USDT, Fee:1 USDT</option>
+                            <option value="TRX" {% if current_user.wallet.startswith("TRX") %}selected{% endif %}>TRX (TRC20) Min:10 USDT, Fee:1 USDT</option>
+                            <option value="ETH" {% if current_user.wallet.startswith("ETH") %}selected{% endif %}>ETH (ERC20) Min:18 USDT, Fee:5.5 USDT</option>
+                            <option value="SOL" {% if current_user.wallet.startswith("SOL") %}selected{% endif %}>SOL Min:50 USDT, Fee:3 USDT</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="text" name="usdt_wallet" value="{{current_user.wallet.split()[1]}}" autocomplete="off" required>
                 </div>
             </div>
 

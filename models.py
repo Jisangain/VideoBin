@@ -24,7 +24,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(300), nullable=False)
     name = db.Column(db.String(100))
-    btc_address = db.Column(db.String(100))
+    wallet = db.Column(db.String(100))
     usd_balance = db.Column(db.Float, default=0.00)
     creation_date = db.Column(db.DateTime, default=db.func.current_timestamp())
 
