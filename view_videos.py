@@ -5,6 +5,7 @@ from . import db, upload_status
 from .models import Base, countlog
 from random import randint
 from .settings import self_ad
+from flask_login import current_user
 from .viewers import distribute, is_a_new_viewer
 
 current_directory = os.getcwd()
@@ -38,6 +39,8 @@ def view_video(filename):
 
     random = randint(1, 100)
     ad = video_info.ad_percent >= random
+    if current_user.is_authenticated and current_user.id == video_info.user_id:
+        ad = False
     if ad:
         user_id = video_info.user_id
         if randint(0,99)<self_ad:
