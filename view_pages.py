@@ -1,12 +1,14 @@
-import string
-from flask import current_app, Blueprint, flash, render_template, request, redirect, url_for, render_template_string
-import random
+from flask import Blueprint, render_template, request, redirect, url_for
+import hmac
+import requests
+import hashlib
+from time import time
 import os
-
+from werkzeug.security import check_password_hash
 from flask_login import current_user, login_required
 from . import db
-from .models import Base, User, Last_access
-from .settings import monetag_key
+from .models import Base, User, Last_access, Distributionlog
+from .settings import monetag_key, binance_api, binance_secret
 from .viewers import distribute
 current_directory = os.getcwd()
 items = os.listdir(current_directory)
@@ -39,7 +41,7 @@ def archive():
 def profile():
     user = db.session.query(User).filter_by(id=current_user.id).first()
     logs = user.distribution_logs
-    return render_template('profile.html', name=current_user.name, wallet = current_user.wallet, logs=logs)
+    return render_template('profile.html', name=current_user.name, logs=logs)
 
 @view_pages.route('/m/<prefix>')
 def show_entries(prefix):
@@ -70,9 +72,9 @@ def edit_post(prefix):
                 db.session.commit()
                 #flash('Video deleted successfully!', 'success')
                 return redirect(url_for('view_pages.archive'))
-            except Exception as e:
+            except Exception:
                 db.session.rollback()
-                #flash(f'An error occurred while deleting the video: {str(e)}', 'danger')
+            except Exception:
                 return redirect(url_for('view_pages.edit', prefix=prefix))
         else:
             #flash('Video not found or you don’t have permission to delete it.', 'danger')
@@ -113,3 +115,72 @@ def adupdate():
             return "No Change"
     else:
         return "False"
+
+@view_pages.route('/payout', methods=['GET'])
+@login_required
+def payout():
+    old_data = db.session.get(Last_access, 2)
+    if not old_data:
+        old_data = Last_access(access_type=2, access_time='1972-01-01', value=None)
+        db.session.add(old_data)
+        db.session.commit()
+    logs = db.session.query(Distributionlog).filter(Distributionlog.date > old_data.access_time, Distributionlog.date < db.func.date_sub(db.func.current_timestamp(), db.text('INTERVAL 2 DAY'))).all()
+    for log in logs:
+        user = db.session.get(User, log.user_id)
+        if user:
+            user.payout_balance += log.usd_balance
+            old_data.access_time = log.date
+            db.session.commit()
+    if logs:
+        thirty_days_ago = db.func.date_sub(db.func.current_timestamp(), db.text('INTERVAL 30 DAY'))
+        db.session.query(Distributionlog).filter(Distributionlog.date < thirty_days_ago).delete()
+        db.session.commit()
+    return render_template('payout.html')
+
+
+
+
+def submit_withdrawal(address, amount, network):
+    url = f'https://api.binance.com/sapi/v1/capital/withdraw/apply'
+    params = {
+        'coin': "USDT",
+        'address': address,
+        'amount': amount,
+        'network': network,
+        'transactionFeeFlag': 'true',
+        'timestamp': int(time() * 1000)
+    }
+    query_string = '&'.join([f"{key}={value}" for key, value in params.items()])
+    signature = hmac.new(
+        binance_secret.encode('utf-8'),
+        query_string.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    params['signature'] = signature
+    
+    headers = {
+        'X-MBX-APIKEY': binance_api
+    }
+    response = requests.post(url, headers=headers, params=params)
+    if response.status_code == 200:
+        return [True, "Withdrawal submitted successfully!"]
+    else:
+        return [False, f"Error: {response.status_code} - {response.json()}"]
+
+@view_pages.route('/payout', methods=['POST'])
+@login_required
+def payout_POST():
+    password = request.form.get('password','')
+    amount = float(request.form.get('amount','0'))
+    if check_password_hash(current_user.password, password):
+        if current_user.payout_balance < amount or amount < 0.2:
+            return "Amount must be between 0.2 to" + str(current_user.payout_balance)
+        else:
+            resp = submit_withdrawal(current_user.wallet.split()[1], amount, current_user.wallet.split()[0])
+            if resp[0] == True:
+                current_user.usd_balance-=amount
+                current_user.payout_balance-=amount
+                db.session.commit()
+            return resp[1]
+    else:
+        return "Wrong password"

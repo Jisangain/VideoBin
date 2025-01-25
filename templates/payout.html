@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Profile{% endblock %}
+{% block title %}Payout{% endblock %}
 {% block headscript %}
     <style>
         h2 {
@@ -36,16 +36,21 @@
 
 <body>
     {% if current_user.is_authenticated %}
-    <h2>You will get paid after three days of holding. Your earning will be updated in each hour. Check Payout section</h2>
-        {% if logs %}
-            <ul>
-            {% for log in logs %}
-                <li>{{ log.date }}: {{ log.usd_balance }} $</li>
-            {% endfor %}
-            </ul>
-        {% else %}
-            <p>No past earning data is available</p>
-        {% endif %}
+    <h2>Your USDT wallet: {{current_user.wallet.split()[1]}}, Network: {{current_user.wallet.split()[0]}} <br/> <span style="color: red;">Double check your wallet and Network before payout</span></h2>
+        <form id="payout" method="POST" action="/payout">
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="number" step="0.01" name="amount" placeholder="USDT Amount" autocomplete="off" required>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <input class="input is-large" type="password" id="password" name="password" placeholder="Password" required>
+                </div>
+            </div>
+            <button class="button is-block is-info is-large is-fullwidth">Withdraw</button>
+        </form>
     </body>
         <script>
             document.querySelector('.hero-body').style.alignItems = 'flex-start';
