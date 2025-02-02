@@ -6,7 +6,7 @@ import os
 load_dotenv()  # Load variables from .env
 monetag_user = os.getenv("monetag_gmail")
 monetag_pass = os.getenv("monetag_pass")
-monetag_key = os.getenv("monetag_key") # Make sure this is same in both flask and monetag_update.py files
+connector_key = os.getenv("connector_key") # Make sure this is same in both flask and monetag_update.py files
 secret_key = os.getenv("flask_key")
 binance_api = os.getenv("binance_api")
 binance_secret = os.getenv("binance_secret")
