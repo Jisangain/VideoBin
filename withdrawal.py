@@ -68,19 +68,18 @@ def withdraw_request():
 def withdraw_update():
     data = request.json
     payout_data = db.session.get(PayoutQueue, data['id'])
-    user = db.session.get(User, data['user_id'])
     if payout_data.withdrawal_id == data['withdrawal_id']:
-        if data['success']:
-            if data['success'] == True:
-                user.usd_balance -= float(payout_data.amount)
-                user.payout_balance -= float(payout_data.amount)
-                user.last_payout = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " --- Sent amount: " + str(payout_data.amount) + ", to address: " + payout_data.address +", network: " + payout_data.network + " --- wait till Confirmations"
-                db.session.delete(payout_data)
-                db.session.commit()
-                return jsonify({'message': 'Withdraw successful'})
-            else:
-                user.last_payout = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " --- Send failed ---" + str(data['reason'])
-                db.session.delete(payout_data)
-                db.session.commit()
-                return jsonify({'message': 'Withdraw failed', 'reason': data['reason']})
+        user = db.session.get(User, data['user_id'])
+        if data['success'] == True:
+            user.usd_balance -= float(payout_data.amount)
+            user.payout_balance -= float(payout_data.amount)
+            user.last_payout = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " --- Sent amount: " + str(payout_data.amount) + ", to address: " + payout_data.address +", network: " + payout_data.network + " --- wait till Confirmations"
+            db.session.delete(payout_data)
+            db.session.commit()
+            return jsonify({'message': 'Withdraw successful'})
+        else:
+            user.last_payout = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " --- Send failed ---" + str(data['reason'])
+            db.session.delete(payout_data)
+            db.session.commit()
+            return jsonify({'message': 'Withdraw failed', 'reason': data['reason']})
     return jsonify({'error': 'Invalid withdraw data'}), 400
