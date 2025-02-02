@@ -102,10 +102,10 @@ async def monetag():
 
 
 async def catbox():
-    global origin
+    global web_url
     while True:
         try:
-            url = origin + "/catupload"
+            url = web_url + "/catupload"
             response = requests.get(url)
             if response.status_code == 200:
                 if response.text == "NULL":
@@ -117,7 +117,7 @@ async def catbox():
                     if response.status_code == 200:
                         if response.text == "sending":
                             print("Video sending to catbox")
-                            video_path = origin + f"/static/videos/{filename}"
+                            video_path = web_url + f"/static/videos/{filename}"
                             files = {
                                 'reqtype': (None, 'urlupload'),
                                 'userhash': (None, "da98f6c298dce1186854a1bfe"),
