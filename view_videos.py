@@ -1,12 +1,12 @@
 from flask import Blueprint, render_template, request
 from sqlalchemy.sql import text
 import os
-from . import db, upload_status
+from . import db
 from .models import Base, countlog
 from random import randint
 from .settings import self_ad
 from flask_login import current_user
-from .viewers import distribute, is_a_new_viewer
+from .viewers import is_a_new_viewer
 
 current_directory = os.getcwd()
 items = os.listdir(current_directory)

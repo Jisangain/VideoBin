@@ -36,6 +36,7 @@
 
 <body>
     {% if current_user.is_authenticated %}
+    <h2>Last Withdraw: {{current_user.last_payout}}</h2>
     <h2>Your USDT wallet: {{current_user.wallet.split()[1]}}, Network: {{current_user.wallet.split()[0]}} <br/> <span style="color: red;">Double check your wallet and Network before payout</span></h2>
         <form id="payout" method="POST" action="/payout">
             <div class="field">

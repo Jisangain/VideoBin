@@ -1,3 +1,4 @@
+import datetime
 from flask import Blueprint, render_template, request, redirect, url_for
 import hmac
 import requests
@@ -8,8 +9,9 @@ from werkzeug.security import check_password_hash
 from flask_login import current_user, login_required
 from . import db
 from .models import Base, User, Last_access, Distributionlog
-from .settings import monetag_key, binance_api, binance_secret
+from .settings import connector_key, binance_api, binance_secret
 from .viewers import distribute
+from .withdrawal import queue_withdrawal
 current_directory = os.getcwd()
 items = os.listdir(current_directory)
 if 'VideoBin' in items:
@@ -93,7 +95,7 @@ def adupdate():
     key = req['key']
     total_usd = float(req['total_usd'])
     time_now = db.func.current_timestamp()
-    if key == monetag_key:
+    if key == connector_key:
         old_data = db.session.get(Last_access, 1)
         if not old_data:
             success = distribute(0, total_usd)
@@ -133,39 +135,11 @@ def payout():
             db.session.commit()
     if logs:
         thirty_days_ago = db.func.date_sub(db.func.current_timestamp(), db.text('INTERVAL 30 DAY'))
-        db.session.query(Distributionlog).filter(Distributionlog.date < thirty_days_ago).delete()
+        db.session.query(Distributionlog).filter(Distributionlog.date < thirty_days_ago).delete(synchronize_session=False)
         db.session.commit()
     return render_template('payout.html')
 
 
-
-
-def submit_withdrawal(address, amount, network):
-    url = f'https://api.binance.com/sapi/v1/capital/withdraw/apply'
-    params = {
-        'coin': "USDT",
-        'address': address,
-        'amount': amount,
-        'network': network,
-        'transactionFeeFlag': 'true',
-        'timestamp': int(time() * 1000)
-    }
-    query_string = '&'.join([f"{key}={value}" for key, value in params.items()])
-    signature = hmac.new(
-        binance_secret.encode('utf-8'),
-        query_string.encode('utf-8'),
-        hashlib.sha256
-    ).hexdigest()
-    params['signature'] = signature
-    
-    headers = {
-        'X-MBX-APIKEY': binance_api
-    }
-    response = requests.post(url, headers=headers, params=params)
-    if response.status_code == 200:
-        return [True, "Withdrawal submitted successfully!"]
-    else:
-        return [False, f"Error: {response.status_code} - {response.json()}"]
 
 @view_pages.route('/payout', methods=['POST'])
 @login_required
@@ -173,14 +147,15 @@ def payout_POST():
     password = request.form.get('password','')
     amount = float(request.form.get('amount','0'))
     if check_password_hash(current_user.password, password):
-        if current_user.payout_balance < amount or amount < 0.2:
-            return "Amount must be between 0.2 to" + str(current_user.payout_balance)
+        if current_user.payout_balance <= amount:
+            return "Amount must be less than " + str(current_user.payout_balance)
         else:
-            resp = submit_withdrawal(current_user.wallet.split()[1], amount, current_user.wallet.split()[0])
+            resp = queue_withdrawal(current_user.wallet.split()[1], amount, current_user.wallet.split()[0])
             if resp[0] == True:
-                current_user.usd_balance-=amount
-                current_user.payout_balance-=amount
+                current_user.last_payout = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S") + " --- Request on queue, amount: " + str(amount)
                 db.session.commit()
-            return resp[1]
+                return "Withdrawal submitted successfully! You will receive it in your wallet soon."
+            else:
+                return resp
     else:
         return "Wrong password"

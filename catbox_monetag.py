@@ -1,19 +1,28 @@
 import asyncio
 from asyncio import sleep
-
-import settings
 import requests
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+import json
+import hmac
+import hashlib
+import settings
+import time
 
 user = settings.monetag_user
 password = settings.monetag_pass
-origin = settings.web_url
-monetag_key = settings.monetag_key
+web_url = settings.web_url
+connector_key = settings.connector_key
+binance_api = settings.binance_api
+binance_secret = settings.binance_secret
+
+
 async def monetag():
-    global origin
+    global web_url
     global password
     global user
-    global monetag_key
-    url = origin
+    global connector_key
+    url = web_url
     while True:
         try:
             with open('monetag_token.txt', 'r') as f:
@@ -48,7 +57,7 @@ async def monetag():
                 print("Total balance:", total_balance)
                 # Send post request to the server to update the balance, api_url = url+'/adupdate'
                 adupdate_payload = {
-                    "key": monetag_key,
+                    "key": connector_key,
                     "total_usd": total_balance
                 }
                 adupdate_response = requests.post(url+'/adupdate', json=adupdate_payload)
@@ -141,8 +150,186 @@ async def catbox():
         await sleep(60)
 
 
+
+
+
+
+
+key = RSA.generate(3072)
+private_key = key
+public_key = key.publickey()
+cipher = PKCS1_OAEP.new(private_key)
+
+
+
+def send_public_key():
+    public_key_pem = public_key.export_key().decode('utf-8')
+    requests.post(f'{web_url}/send_key', json={'public_key': public_key_pem})
+
+def get_encrypted_data():
+    response = requests.get(f'{web_url}/withdraw_request')
+    if response.status_code == 200:
+        data = response.json()
+        encrypted_data = bytes.fromhex(data['encrypted_data'])
+        return encrypted_data
+    elif response.status_code == 220:
+        return "just_wait"
+    else:
+        return None
+
+def decrypt_and_verify(encrypted_data):
+    global cipher
+    try:
+        decrypted_data = cipher.decrypt(encrypted_data)
+    except ValueError as e:
+        if str(e) == 'Incorrect decryption.':
+            send_public_key()
+            return 'New key sent', 0
+        else:
+            return f'Error: {e}', -1
+    except Exception as e:
+        return f'Error: {e}', -1
+    return decrypted_data.decode('utf-8'), 1
+
+
+def submit_withdrawal(withdrawOrderId, address, amount, network):
+    url = f'https://api.binance.com/sapi/v1/capital/withdraw/apply'
+    
+    # Parameters
+    params = {
+        'coin': "USDT",
+        'withdrawOrderId': withdrawOrderId,
+        'address': address,
+        'amount': float(amount),
+        'network': network,
+        'transactionFeeFlag': 'true',
+        'timestamp': int(time.time() * 1000)
+    }
+    query_string = '&'.join([f"{key}={value}" for key, value in params.items()])
+    signature = hmac.new(
+        binance_secret.encode('utf-8'),
+        query_string.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    params['signature'] = signature
+    
+    headers = {
+        'X-MBX-APIKEY': binance_api
+    }
+    
+    # Send request
+    response = requests.post(url, headers=headers, params=params)
+    if response.status_code == 200:
+        return "Withdrawal submitted successfully!", 1
+    else:
+        return response.json(), 0
+
+
+
+def get_withdrawal_status(withdrawOrderId):
+    url = f'https://api.binance.com/sapi/v1/capital/withdraw/history'
+    params = {
+        'withdrawOrderId': withdrawOrderId,
+        'timestamp': int(time.time() * 1000)
+    }
+    query_string = '&'.join([f"{key}={value}" for key, value in params.items()])
+    signature = hmac.new(
+        binance_secret.encode('utf-8'),
+        query_string.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    params['signature'] = signature
+
+    headers = {
+        'X-MBX-APIKEY': binance_api
+    }
+
+    response = requests.get(url, headers=headers, params=params)
+    if response.status_code == 200:
+        data = response.json()
+        for withdrawal in data:
+            if withdrawal['withdrawOrderId'] == withdrawOrderId:
+                return withdrawal['withdrawOrderId'], 1
+        return "Withdrawal not found.", 0
+    else:
+        return f"Error: {response.status_code} - {response.json()}", -1
+
+
+
+async def payout():
+    while True:
+        encrypted_data = get_encrypted_data()
+        if encrypted_data == 'just_wait':
+            await sleep(60)
+            continue
+        if encrypted_data:
+            data = decrypt_and_verify(encrypted_data)
+            if data[1] == 0: # New key to send
+                send_public_key()
+                await sleep(10)
+                continue
+            elif data[1] == -1: # Some error while decrypting
+                print(f'{time.strftime("%Y-%m-%d %H:%M:%S")} - {data[0]}')
+            else:
+                data = json.loads(data[0])
+                status = get_withdrawal_status(data['withdrawal_id'])
+
+                if status[1] == 1: # Privious withdrawal found
+                    to_send = {
+                        'id': data['id'],
+                        'withdrawal_id': data['withdrawal_id'],
+                        'user_id': data['user_id'],
+                        'success': True
+                    }
+                    response = requests.post(f'{web_url}/withdraw_update', json=to_send)
+                    print(f'{time.strftime("%Y-%m-%d %H:%M:%S")} - Old withdrawal found')
+                elif status[1] == 0: # Need to submit withdrawal
+                    status = submit_withdrawal(data['withdrawal_id'], data['address'], data['amount'], data['network'])
+                    if status[1] == 1:
+                        to_send = {
+                            'id': data['id'],
+                            'withdrawal_id': data['withdrawal_id'],
+                            'user_id': data['user_id'],
+                            'success': True
+                        }
+                        response = requests.post(f'{web_url}/withdraw_update', json=to_send)
+                        print(f'{time.strftime("%Y-%m-%d %H:%M:%S")} - Done: {status[0]}')
+                    else:
+                        to_send = {}
+                        if status[0]['code'] == -4026:
+                            to_send = {
+                                'id': data['id'],
+                                'withdrawal_id': data['withdrawal_id'],
+                                'user_id': data['user_id'],
+                                'success': False,
+                                'reason': 'Insufficient server funds'
+                            }
+                            print(f"Insufficient server fund")
+                        else:
+                            to_send = {
+                                'id': data['id'],
+                                'withdrawal_id': data['withdrawal_id'],
+                                'user_id': data['user_id'],
+                                'success': False,
+                                'reason': status[0]
+                            }
+                            print(print(f'{time.strftime("%Y-%m-%d %H:%M:%S")} - {status[0]}'))
+                        response = requests.post(f'{web_url}/withdraw_update', json=to_send)
+                        
+                else: # Some error while getting withdrawal status
+                    print(f'{time.strftime("%Y-%m-%d %H:%M:%S")} - {status[0]}')
+            await sleep(30)
+        else:
+            send_public_key()
+            await sleep(10)
+
+
+
+
+
+
 async def main():
-    await asyncio.gather(monetag(), catbox())
+    await asyncio.gather(monetag(), catbox(), payout())
 
 if __name__ == "__main__":
     asyncio.run(main())

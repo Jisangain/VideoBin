@@ -45,7 +45,7 @@ def create_app():
 
     from .view_videos import view_videos as view_videos_blueprint
     app.register_blueprint(view_videos_blueprint)
-    return app
 
-    from .payout import payout as payout_blueprint
-    app.register_blueprint(payout_blueprint)
+    from .withdrawal import withdrawal as withdraw_blueprint
+    app.register_blueprint(withdraw_blueprint)
+    return app

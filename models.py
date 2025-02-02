@@ -1,3 +1,4 @@
+import datetime
 from sqlalchemy import PrimaryKeyConstraint
 from . import db
 from flask_login import UserMixin
@@ -27,6 +28,7 @@ class User(UserMixin, db.Model):
     wallet = db.Column(db.String(100))
     usd_balance = db.Column(db.Float, default=0.00)
     payout_balance = db.Column(db.Float, default=0.00)
+    last_payout = db.Column(db.String(500), default=None, nullable=True)
     creation_date = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     def __repr__(self):
@@ -69,3 +71,16 @@ class Last_access(db.Model):
 
     def __repr__(self):
         return f'<Last_access {self.access_time}>'
+
+class PayoutQueue(db.Model):
+    __tablename__ = 'payout_queue'
+    id = db.Column(db.Integer, primary_key=True)
+    withdrawal_id = db.Column(db.String(255), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"), nullable=False)
+    address = db.Column(db.String(255), nullable=False)
+    network = db.Column(db.String(50), nullable=False)
+    amount = db.Column(db.Numeric(18, 8), nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp(), nullable=False)
+
+    def __repr__(self):
+        return f"<PayoutQueue id={self.id} user_id={self.user_id} coin={self.coin} amount={self.amount}>"
