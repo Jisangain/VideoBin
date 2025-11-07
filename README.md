@@ -59,6 +59,7 @@ Alternatively you can run `python3 catbox_monetag.py` in separate online/local s
 ### Live Demo
 
 An underdevelopment live version is available at [picosi.pythonanywhere.com](https://picosi.pythonanywhere.com)
+A django version is available at [picosi.tech](https://picosi.tech)
 
 ## Contributions
 
